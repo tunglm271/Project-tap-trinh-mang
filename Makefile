@@ -8,7 +8,7 @@ PROG = gui
 
 # Mục tiêu mặc định
 all: $(OUTPUT)
-	./$(OUTPUT)  # Lệnh thực thi myapp sau khi biên dịch
+	./$(OUTPUT) 
 
 # Quy tắc biên dịch và liên kết tệp gui.c để tạo myapp
 $(OUTPUT): $(CLIENT)/$(PROG).c
