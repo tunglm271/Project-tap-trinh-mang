@@ -1,40 +1,27 @@
-#include<gtk/gtk.h>
+#include <gtk/gtk.h>
 
-// Activate function called when the app is launched
-static void activate(GtkApplication *app, gpointer user_data) {
-    GtkWidget *window;
-    GtkWidget *label;
-
-    // Create a new window with the application
-    window = gtk_application_window_new(app);
-    gtk_window_set_title(GTK_WINDOW(window), "Hello GTK3");
-    gtk_window_set_default_size(GTK_WINDOW(window), 200, 100);
-
-    // Create a new label with "Hello, World!" text
-    label = gtk_label_new("Hello, World!");
-
-    // Add the label to the window
-    gtk_container_add(GTK_CONTAINER(window), label);
-
-    // Show all widgets in the window
-    gtk_widget_show_all(window);
+void on_button_clicked(GtkButton *button, gpointer user_data) {
+    g_print("Button clicked!\n");
 }
 
-int main(int argc, char **argv) {
-    GtkApplication *app;
-    int status;
+int main(int argc, char *argv[]) {
+    GtkBuilder *builder;
+    GtkWidget *window;
 
-    // Create a new GtkApplication
-    app = gtk_application_new("com.example.GtkApp", G_APPLICATION_FLAGS_NONE);
+    gtk_init(&argc, &argv);
 
-    // Connect the "activate" signal to the activate function
-    g_signal_connect(app, "activate", G_CALLBACK(activate), NULL);
+    // Tạo đối tượng GtkBuilder và tải tệp Glade
+    builder = gtk_builder_new_from_file("client/homepage.glade");
 
-    // Run the application
-    status = g_application_run(G_APPLICATION(app), argc, argv);
+    // Lấy đối tượng window từ Glade
+    window = GTK_WIDGET(gtk_builder_get_object(builder, "window"));
+    gtk_builder_connect_signals(builder, NULL);
 
-    // Free the memory allocated for the GtkApplication
-    g_object_unref(app);
+    // Hiển thị cửa sổ
+    gtk_widget_show_all(window);
 
-    return status;
+    // Chạy vòng lặp chính của GTK
+    gtk_main();
+
+    return 0;
 }
