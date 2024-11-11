@@ -9,17 +9,16 @@
         <property name="visible">True</property>
         <property name="can-focus">False</property>
         <child>
-          <object class="GtkButton" id="button">
-            <property name="label" translatable="yes">Dm thg hieu</property>
+          <object class="GtkImage" id="background-image">
             <property name="width-request">100</property>
             <property name="height-request">80</property>
             <property name="visible">True</property>
-            <property name="can-focus">True</property>
-            <property name="receives-default">True</property>
+            <property name="can-focus">False</property>
+            <property name="pixbuf">background-img.png</property>
           </object>
           <packing>
-            <property name="x">158</property>
-            <property name="y">67</property>
+            <property name="x">0</property>
+            <property name="y">0</property>
           </packing>
         </child>
       </object>
