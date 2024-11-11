@@ -1,39 +1,37 @@
 #include <gtk/gtk.h>
 
-void on_button_clicked(GtkButton *button, gpointer user_data) {
-    g_print("Button clicked!\n");
-}
-
 int main(int argc, char *argv[]) {
-    GtkBuilder *builder;
     GtkWidget *window;
     GtkWidget *image;
-    GdkPixbuf *pixbuf;
+    GdkPixbuf *pixbuf, *scaled_pixbuf;
 
     gtk_init(&argc, &argv);
 
     // Load the Glade file
-    builder = gtk_builder_new_from_file("client/homepage.glade");
+    GtkBuilder *builder = gtk_builder_new_from_file("client/homepage.glade");
 
-    // Get the window and image widgets
+    // Create window from Glade
     window = GTK_WIDGET(gtk_builder_get_object(builder, "window"));
-    image = GTK_WIDGET(gtk_builder_get_object(builder, "background_image"));
 
-    // Load and scale the image to fit the window size
-    pixbuf = gdk_pixbuf_new_from_file_at_scale("client/background-img.png", 400, 300, TRUE, NULL);
-    gtk_image_set_from_pixbuf(GTK_IMAGE(image), pixbuf);
-
-    gtk_builder_connect_signals(builder, NULL);
+    // Load and scale the image
+    image = GTK_WIDGET(gtk_builder_get_object(builder, "image"));
+    pixbuf = gdk_pixbuf_new_from_file("client/background-img.png", NULL);
+    
+    // Scale the image to fit the window size (e.g., 800x500)
+    scaled_pixbuf = gdk_pixbuf_scale_simple(pixbuf, 800, 500, GDK_INTERP_BILINEAR);
+    
+    // Set the scaled image to the GtkImage widget
+    gtk_image_set_from_pixbuf(GTK_IMAGE(image), scaled_pixbuf);
 
     // Show the window
     gtk_widget_show_all(window);
 
-    // Run the main GTK loop
+    // Main GTK loop
     gtk_main();
 
-    // Free resources
+    // Cleanup
     g_object_unref(pixbuf);
-    g_object_unref(builder);
+    g_object_unref(scaled_pixbuf);
 
     return 0;
 }
