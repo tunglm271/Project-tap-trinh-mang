@@ -1,0 +1,28 @@
+window 
+{
+    background-image: url('assets/background-img.png'); 
+    background-size: cover;               
+    background-position: center;   
+    font-weight: 600;
+}
+
+#title {
+    color: black;
+}
+
+label {
+    color: aqua;
+    font-weight: bold;
+}
+
+button > label {
+    color: black;
+}
+
+#welcome-text {
+    font-size: 30px;
+}
+
+#content {
+    padding: 10px;
+}
