@@ -6,16 +6,24 @@ window
     font-weight: 600;
 }
 
-#title {
-    color: black;
-}
-
 label {
-    color: aqua;
+    color: white;
     font-weight: bold;
 }
 
+button {
+    background: radial-gradient(circle, #4A90E2 40%, #003366 100%);
+}
+
+button:active {
+    background: orange;
+}
+
 button > label {
+    color: white;
+}
+
+#title {
     color: black;
 }
 
@@ -23,6 +31,20 @@ button > label {
     font-size: 30px;
 }
 
-#content {
+#money_section {
+    background-image: url('assets/price_background.jpg');
+    background-size: cover;               
+    background-position: center;
+    border-left: white 1px solid;
+}
+
+#question_section {
+    margin-top: 100px; 
+    margin-bottom: 10px; 
+}
+
+#question-label {
+    background: radial-gradient(circle, #4A90E2 40%, #003366 100%);
     padding: 10px;
+    border: #C0C0C0 3px solid;
 }

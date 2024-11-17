@@ -36,24 +36,38 @@ void remove_all_children(GtkContainer *container) {
     g_list_free(children);
 }
 
-void on_start_game_clicked(GtkButton *button, gpointer GameData) {
+void render_question(GtkButton *button, gpointer GameData) {
     // Extract box from user_data (user_data is the same as before)
     gpointer *data = (gpointer *)GameData;
-    GtkWidget *box = (GtkWidget *)data[0];
+    GtkWidget *main_box = (GtkWidget *)data[0];
 
-    remove_all_children(GTK_CONTAINER(box));
+    // Clear all children of the main box
+    remove_all_children(GTK_CONTAINER(main_box));
 
+    // Change direction of the main box to horizontal
+    gtk_orientable_set_orientation(GTK_ORIENTABLE(main_box), GTK_ORIENTATION_HORIZONTAL);
+
+    // Create two sub-boxes
+    GtkWidget *question_section = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    gtk_widget_set_name(question_section, "question_section");
+    GtkWidget *money_section = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    gtk_widget_set_size_request(money_section, 200, -1);
+    gtk_widget_set_name(money_section, "money_section");
+
+    // =============================
+    // Add content to the question box
+    // =============================
 
     // Create a new label with a question
     GtkWidget *question_label = gtk_label_new("What is the capital of France?");
+    gtk_widget_set_name(question_label, "question-label");
 
     // Create a grid for the answer buttons
     GtkWidget *grid = gtk_grid_new();
-     gtk_widget_set_halign(grid, GTK_ALIGN_CENTER); 
-    gtk_widget_set_hexpand(grid, FALSE); 
-    gtk_grid_set_row_spacing(GTK_GRID(grid), 10); 
-    gtk_grid_set_column_spacing(GTK_GRID(grid), 10);
-
+    gtk_widget_set_halign(grid, GTK_ALIGN_CENTER);
+    gtk_widget_set_hexpand(grid, FALSE);
+    gtk_grid_set_row_spacing(GTK_GRID(grid), 30);
+    gtk_grid_set_column_spacing(GTK_GRID(grid), 70);
 
     // Create answer buttons
     GtkWidget *btn1 = gtk_button_new_with_label("Berlin");
@@ -62,25 +76,48 @@ void on_start_game_clicked(GtkButton *button, gpointer GameData) {
     GtkWidget *btn4 = gtk_button_new_with_label("Rome");
 
     // Add buttons to the grid
-    gtk_grid_attach(GTK_GRID(grid), btn1, 0, 0, 1, 1); // Attach button 1 to (0, 0)
-    gtk_grid_attach(GTK_GRID(grid), btn2, 1, 0, 1, 1); // Attach button 2 to (1, 0)
-    gtk_grid_attach(GTK_GRID(grid), btn3, 0, 1, 1, 1); // Attach button 3 to (0, 1)
-    gtk_grid_attach(GTK_GRID(grid), btn4, 1, 1, 1, 1); // Attach button 4 to (1, 1)
+    gtk_grid_attach(GTK_GRID(grid), btn1, 0, 0, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), btn2, 1, 0, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), btn3, 0, 1, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), btn4, 1, 1, 1, 1);
 
-    // Remove all existing widgets from the box (clear screen)
+    // Pack the question label and grid into the question box
+    gtk_box_pack_start(GTK_BOX(question_section), question_label, FALSE, FALSE, 10);
+    gtk_box_pack_start(GTK_BOX(question_section), grid, FALSE, FALSE, 10);
 
-    // Add the question label and grid to the box
-    gtk_box_pack_start(GTK_BOX(box), question_label, TRUE, TRUE, 10);  // Add question label
-    gtk_box_pack_start(GTK_BOX(box), grid, TRUE, TRUE, 10);  // Add the grid containing answer buttons
+    // =============================
+    // Add content to the money list box
+    // =============================
 
-    // Show all widgets in the box
-    gtk_widget_show_all(box);
-    
-    // Free the allocated data array (optional)
+    // Example money list labels
+    GtkWidget *money_label1 = gtk_label_new("15. $1,000,000");
+    GtkWidget *money_label2 = gtk_label_new("14. $500,000");
+    GtkWidget *money_label3 = gtk_label_new("13. $250,000");
+    GtkWidget *money_label4 = gtk_label_new("12. $125,000");
+    GtkWidget *money_label5 = gtk_label_new("11. $64,000");
+
+    // Add money list labels to the money list box
+    gtk_box_pack_start(GTK_BOX(money_section), money_label1, FALSE, FALSE, 5);
+    gtk_box_pack_start(GTK_BOX(money_section), money_label2, FALSE, FALSE, 5);
+    gtk_box_pack_start(GTK_BOX(money_section), money_label3, FALSE, FALSE, 5);
+    gtk_box_pack_start(GTK_BOX(money_section), money_label4, FALSE, FALSE, 5);
+    gtk_box_pack_start(GTK_BOX(money_section), money_label5, FALSE, FALSE, 5);
+
+    // =============================
+    // Add both sub-boxes to the main box
+    // =============================
+
+    gtk_box_pack_start(GTK_BOX(main_box), question_section, TRUE, TRUE, 10);
+    gtk_box_pack_start(GTK_BOX(main_box), money_section, FALSE, FALSE, 0);
+
+    // Show all widgets in the main box
+    gtk_widget_show_all(main_box);
+
+    // Free the allocated data array
     g_free(data);
 }
 
-void on_submit_clicked(GtkButton *button, gpointer user_data) {
+void submit_name(GtkButton *button, gpointer user_data) {
     // Extract box and entry from user_data (which is a pointer to a 2-element array)
     gpointer *data = (gpointer *)user_data;
     GtkWidget *box = (GtkWidget *)data[0];
@@ -92,18 +129,14 @@ void on_submit_clicked(GtkButton *button, gpointer user_data) {
     // Set the label text to "Welcome [text from entry]"
     gtk_label_set_text(GTK_LABEL(welcome_text), g_strdup_printf("Welcome %s", text));
     gtk_widget_set_name(welcome_text, "welcome-text");
-    GList *children = gtk_container_get_children(GTK_CONTAINER(box)); 
-    for (GList *iter = children; iter != NULL; iter = iter->next) {
-        gtk_widget_destroy(GTK_WIDGET(iter->data));  // Destroy each child widget
-    }
-    g_list_free(children);  // Free the GList after use
+    remove_all_children(GTK_CONTAINER(box));
 
     gpointer *gameData = g_new(gpointer, 1);
     gameData[0] = box;
     // Add the new label to the box
     gtk_box_pack_start(GTK_BOX(box), welcome_text, TRUE, TRUE, 10); // Add the label with expanding
     gtk_box_pack_start(GTK_BOX(box), start_btn, TRUE, FALSE, 0);
-    g_signal_connect(start_btn, "clicked", G_CALLBACK(on_start_game_clicked), gameData);
+    g_signal_connect(start_btn, "clicked", G_CALLBACK(render_question), gameData);
     // Show the label
     gtk_widget_show_all(box);  // Make sure the label is shown
 
@@ -122,7 +155,7 @@ void activate(GtkApplication *app, gpointer user_data) {
 
     // Create a new window with the application
     window = gtk_application_window_new(app);
-    gtk_window_set_default_size(GTK_WINDOW(window), 700, 400);
+    gtk_window_set_default_size(GTK_WINDOW(window), 900, 500);
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_window_close), NULL);
     gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
     gtk_window_set_resizable(GTK_WINDOW(window), FALSE);
@@ -163,7 +196,7 @@ void activate(GtkApplication *app, gpointer user_data) {
     data[1] = entry;  // Store entry pointer
 
     // Connect the submit button click event to the on_submit_clicked callback
-    g_signal_connect(submit_btn, "clicked", G_CALLBACK(on_submit_clicked), data);
+    g_signal_connect(submit_btn, "clicked", G_CALLBACK(submit_name), data);
 
     // Add the label, entry, and button to the box container
     gtk_box_pack_start(GTK_BOX(box), label, FALSE, FALSE, 0);  // Add the "Enter your name" label
