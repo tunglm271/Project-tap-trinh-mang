@@ -1,5 +1,14 @@
 #include "app_function.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+
+#define PORT 8080
+#define BUFFER_SIZE 1024
+
 void load_css(GtkWidget *widget) {
     // Create a new CSS provider
     GtkCssProvider *provider = gtk_css_provider_new();
@@ -41,12 +50,31 @@ void add_css_class_to_widget(GtkWidget *widget, const gchar *css_class) {
     gtk_style_context_add_class(context, css_class);
 }
 
+gboolean update_countdown(gpointer user_data) {
+    CountdownData *data = (CountdownData *)user_data;
+    time_t now = time(NULL);
+
+    int time_left = (int)difftime(data->end_time, now);
+    if (time_left >= 0) {
+        char buffer[32];
+        snprintf(buffer, sizeof(buffer), "%.2d", time_left);
+        gtk_label_set_text(data->label, buffer);
+        return TRUE; // Continue the timeout
+    } else {
+        gtk_label_set_text(data->label, "00");
+        return FALSE; // Stop the timeout
+    }
+}
+
 void render_question(GtkButton *button, gpointer GameData) {
-    // Extract box from user_data (user_data is the same as before)
     gpointer *data = (gpointer *)GameData;
     GtkWidget *main_box = (GtkWidget *)data[0];
 
-    // Clear all children of the main box
+    int sock = 0;
+    struct sockaddr_in serv_addr;
+    char buffer[BUFFER_SIZE] = {0};
+    
+
     remove_all_children(GTK_CONTAINER(main_box));
 
     // Change direction of the main box to horizontal
@@ -62,9 +90,58 @@ void render_question(GtkButton *button, gpointer GameData) {
     // =============================
     // Add content to the question box
     // =============================
+    // Create a grid to wrap the label
+    GtkWidget *wrapper_grid = gtk_grid_new();
+    gtk_widget_set_size_request(wrapper_grid, 100, -1); // Set the width of the wrapper
+
+    // Create the countdown label
+    GtkWidget *countdown_label = gtk_label_new("30");
+    gtk_widget_set_name(countdown_label, "countdown-label");
+
+    // Add the label to the grid
+    gtk_grid_attach(GTK_GRID(wrapper_grid), countdown_label, 0, 0, 1, 1);
+
+    // Add the wrapper grid to the question section
+    gtk_box_pack_start(GTK_BOX(question_section), wrapper_grid, FALSE, FALSE, 10);
+
+    // Initialize countdown data
+    CountdownData *countdown_data = g_malloc(sizeof(CountdownData));
+    countdown_data->label = GTK_LABEL(countdown_label);
+    countdown_data->end_time = time(NULL) + 30;
+
+    // Start the countdown
+    g_timeout_add(1000, (GSourceFunc)update_countdown, countdown_data);
+
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        printf("Socket creation error\n");
+        return;
+    }
+
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(PORT);
+
+    if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0) {
+        printf("Invalid address/ Address not supported \n");
+        return ;
+    }
+
+    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
+        printf("Connection Failed \n");
+        return ;
+    }
+    
+    memset(buffer, 0, BUFFER_SIZE); 
+    recv(sock, buffer, BUFFER_SIZE, 0);
+    close(sock);
+    
+    char *question = strtok(buffer, "\n"); 
+    char *options[4];
+    for (int i = 0; i < 4; i++) {
+        options[i] = strtok(NULL, "\n");
+    }
 
     // Create a new label with a question
-    GtkWidget *question_label = gtk_label_new("What is the capital of France?");
+    GtkWidget *question_label = gtk_label_new(question);
     gtk_widget_set_name(question_label, "question-label");
 
     // Create a grid for the answer buttons
@@ -75,11 +152,12 @@ void render_question(GtkButton *button, gpointer GameData) {
     gtk_grid_set_column_spacing(GTK_GRID(grid), 70);
 
     // Create answer buttons
-    GtkWidget *btn1 = gtk_button_new_with_label("Berlin");
-    GtkWidget *btn2 = gtk_button_new_with_label("Madrid");
-    GtkWidget *btn3 = gtk_button_new_with_label("Paris");
-    GtkWidget *btn4 = gtk_button_new_with_label("Rome");
-
+    GtkWidget *btn1 = gtk_button_new_with_label(options[0]);
+    GtkWidget *btn2 = gtk_button_new_with_label(options[1]);
+    GtkWidget *btn3 = gtk_button_new_with_label(options[2]);
+    GtkWidget *btn4 = gtk_button_new_with_label(options[3]);
+    gtk_widget_set_size_request(btn1, 150, -1);
+    gtk_widget_set_size_request(btn2, 150, -1);
     // Add buttons to the grid
     gtk_grid_attach(GTK_GRID(grid), btn1, 0, 0, 1, 1);
     gtk_grid_attach(GTK_GRID(grid), btn2, 1, 0, 1, 1);
@@ -94,10 +172,25 @@ void render_question(GtkButton *button, gpointer GameData) {
     // Add content to the money list box
     // =============================
 
-    GtkWidget* helpButton = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+    GtkWidget* helpButton = gtk_grid_new();
+    gtk_grid_set_column_homogeneous(GTK_GRID(helpButton), TRUE);
+    gtk_grid_set_column_spacing(GTK_GRID(helpButton), 10);
+    gtk_widget_set_margin_start(helpButton, 15);  
+    gtk_widget_set_margin_end(helpButton, 15);   
+    gtk_widget_set_margin_top(helpButton, 10);    
+    gtk_widget_set_margin_bottom(helpButton, 10);
+    
     GtkWidget* callFriend =  gtk_button_new_with_label("");
+    GtkWidget* help_50 =  gtk_button_new_with_label("50:50");
+    GtkWidget* askPeople =  gtk_button_new_with_label("");
+
     gtk_widget_set_name(callFriend,"callFriend");
-    gtk_box_pack_start(GTK_BOX(helpButton), callFriend, FALSE, FALSE, 10);
+    gtk_widget_set_name(askPeople,"askPeople");
+    add_css_class_to_widget(help_50,"helpOption");
+
+    gtk_grid_attach(GTK_GRID(helpButton), help_50, 0, 0, 1, 1);
+    gtk_grid_attach(GTK_GRID(helpButton), callFriend, 1, 0, 1, 1);
+    gtk_grid_attach(GTK_GRID(helpButton), askPeople, 2, 0, 1, 1);
     gtk_box_pack_start(GTK_BOX(money_section), helpButton, FALSE, FALSE, 5);
 
 
@@ -128,11 +221,8 @@ void render_question(GtkButton *button, gpointer GameData) {
 
     gtk_box_pack_start(GTK_BOX(main_box), question_section, TRUE, TRUE, 10);
     gtk_box_pack_start(GTK_BOX(main_box), money_section, FALSE, FALSE, 0);
-
-    // Show all widgets in the main box
     gtk_widget_show_all(main_box);
 
-    // Free the allocated data array
     g_free(data);
 }
 
@@ -140,9 +230,9 @@ void submit_name(GtkButton *button, gpointer user_data) {
     // Extract box and entry from user_data (which is a pointer to a 2-element array)
     gpointer *data = (gpointer *)user_data;
     GtkWidget *box = (GtkWidget *)data[0];
-    GtkEntry *entry = (GtkEntry *)data[1];
-
-    const gchar *text = gtk_entry_get_text(entry);  // Get the text from the entry
+    GtkEntry *name_input = (GtkEntry *)data[1];
+    GtkEntry *password_input = (GtkEntry *)data[2];
+    const gchar *text = gtk_entry_get_text(name_input);  // Get the text from the entry
     GtkWidget *welcome_text = gtk_label_new(NULL);  // Create a new label
     GtkWidget *start_btn = gtk_button_new_with_label("Start game");
     // Set the label text to "Welcome [text from entry]"
@@ -163,14 +253,46 @@ void submit_name(GtkButton *button, gpointer user_data) {
     g_free(data);
 }
 
+
+void render_login(GtkButton *button, gpointer input_data) {
+    gpointer *data = (gpointer *)input_data;
+    GtkWidget *box = (GtkWidget *)data[0];
+    remove_all_children(GTK_CONTAINER(box));
+
+    GtkWidget *labelName = gtk_label_new("Enter username:");
+    GtkWidget *labelPassword = gtk_label_new("Enter password");
+    GtkWidget *NameInput = gtk_entry_new();
+    GtkWidget *PasswordInput = gtk_entry_new();
+    GtkWidget *SubmitBtn = gtk_button_new_with_label("Login");
+
+    gpointer *user_data = g_new(gpointer, 3);
+    user_data[0] = box;
+    user_data[1] = NameInput;
+    user_data[2] = PasswordInput;
+
+    // Connect the submit button click event to the on_submit_clicked callback
+    g_signal_connect(SubmitBtn, "clicked", G_CALLBACK(submit_name), user_data);
+    g_signal_connect(PasswordInput, "activate", G_CALLBACK(submit_name), user_data);
+
+
+    gtk_box_pack_start(GTK_BOX(box), labelName, FALSE, FALSE, 0);  
+    gtk_box_pack_start(GTK_BOX(box), NameInput, FALSE, FALSE, 0);  
+    gtk_box_pack_start(GTK_BOX(box), labelPassword, FALSE, FALSE, 0);  
+    gtk_box_pack_start(GTK_BOX(box), PasswordInput, FALSE, FALSE, 0);  
+    gtk_box_pack_start(GTK_BOX(box), SubmitBtn, FALSE, FALSE, 0); 
+
+    gtk_widget_show_all(box);  
+    g_free(data);
+}
+
 void activate(GtkApplication *app, gpointer user_data) {
     GtkWidget *window;
     GtkWidget *box;
-    GtkWidget *entry;     // Text input field
-    GtkWidget *submit_btn; // Submit button
-    GtkWidget *label;     // Label for "Enter your name"
     GtkWidget *header_bar;
     GtkWidget *title_label;
+
+    GtkWidget *loginButton;
+    GtkWidget *signUpButton;
 
     // Create a new window with the application
     window = gtk_application_window_new(app);
@@ -181,46 +303,28 @@ void activate(GtkApplication *app, gpointer user_data) {
     header_bar = gtk_header_bar_new();
     gtk_header_bar_set_title(GTK_HEADER_BAR(header_bar), "Custom Window Title");
     gtk_header_bar_set_show_close_button(GTK_HEADER_BAR(header_bar), TRUE);
-
-    // Create a label for the title and add custom CSS class
     title_label = gtk_label_new("Ai Là Triệu Phú");
     gtk_widget_set_name(title_label, "title");
-
-    // Remove the default title and add our custom label to the header bar
     gtk_header_bar_set_title(GTK_HEADER_BAR(header_bar), NULL);
     gtk_container_add(GTK_CONTAINER(header_bar), title_label);
-
-    // Set the header bar as the window's title bar
     gtk_window_set_titlebar(GTK_WINDOW(window), header_bar);
     load_css(window);
 
+
     // Create a box container (vertical or horizontal)
-    box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10); // 10 is the spacing between elements
+    box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
     gtk_widget_set_name(box, "content");
-    // Create a label for "Enter your name"
-    label = gtk_label_new("Enter your name");
 
-    // Create a text entry (input field)
-    entry = gtk_entry_new();
-
-    // Create a submit button
-    submit_btn = gtk_button_new_with_label("Submit");
-
-    // Set the size of the submit button (optional)
-    gtk_widget_set_size_request(submit_btn, 100, 50);  // Width: 100px, Height: 50px
+    loginButton = gtk_button_new_with_label("Login");
+    signUpButton = gtk_button_new_with_label("Create new account");
 
     // Create a tuple (array) to store box and entry
-    gpointer *data = g_new(gpointer, 2);
-    data[0] = box;    // Store box pointer
-    data[1] = entry;  // Store entry pointer
-
+    gpointer *data = g_new(gpointer, 1);
+    data[0] = box;    
     // Connect the submit button click event to the on_submit_clicked callback
-    g_signal_connect(submit_btn, "clicked", G_CALLBACK(submit_name), data);
-    g_signal_connect(entry, "activate", G_CALLBACK(submit_name), data);
-    // Add the label, entry, and button to the box container
-    gtk_box_pack_start(GTK_BOX(box), label, FALSE, FALSE, 0);  // Add the "Enter your name" label
-    gtk_box_pack_start(GTK_BOX(box), entry, FALSE, FALSE, 0);  // Add the text entry field
-    gtk_box_pack_start(GTK_BOX(box), submit_btn, FALSE, FALSE, 0); // Add the submit button
+    g_signal_connect(loginButton, "clicked", G_CALLBACK(render_login), data);
+    gtk_box_pack_start(GTK_BOX(box), loginButton, FALSE, FALSE, 0);  // Add the "Enter your name" label
+    gtk_box_pack_start(GTK_BOX(box), signUpButton, FALSE, FALSE, 0);  // Add the text entry field
 
     // Add the box container to the window
     gtk_container_add(GTK_CONTAINER(window), box);

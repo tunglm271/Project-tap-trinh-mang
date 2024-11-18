@@ -5,7 +5,7 @@ int main() {
     const char *filename = "user.txt";
     const char *usernameToFind = "hiew1";
 
-    const char *username = "hiew6";
+    const char *username = "hiew1";
     const char *password = "password123";
 
     if (login(filename, username, password)) {
