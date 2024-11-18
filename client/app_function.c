@@ -1,5 +1,14 @@
 #include "app_function.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+
+#define PORT 8080
+#define BUFFER_SIZE 1024
+
 void load_css(GtkWidget *widget) {
     // Create a new CSS provider
     GtkCssProvider *provider = gtk_css_provider_new();
@@ -61,6 +70,11 @@ void render_question(GtkButton *button, gpointer GameData) {
     gpointer *data = (gpointer *)GameData;
     GtkWidget *main_box = (GtkWidget *)data[0];
 
+    int sock = 0;
+    struct sockaddr_in serv_addr;
+    char buffer[BUFFER_SIZE] = {0};
+    
+
     remove_all_children(GTK_CONTAINER(main_box));
 
     // Change direction of the main box to horizontal
@@ -98,9 +112,36 @@ void render_question(GtkButton *button, gpointer GameData) {
     // Start the countdown
     g_timeout_add(1000, (GSourceFunc)update_countdown, countdown_data);
 
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        printf("Socket creation error\n");
+        return;
+    }
+
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(PORT);
+
+    if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0) {
+        printf("Invalid address/ Address not supported \n");
+        return ;
+    }
+
+    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
+        printf("Connection Failed \n");
+        return ;
+    }
+    
+    memset(buffer, 0, BUFFER_SIZE); 
+    recv(sock, buffer, BUFFER_SIZE, 0);
+    close(sock);
+    
+    char *question = strtok(buffer, "\n"); 
+    char *options[4];
+    for (int i = 0; i < 4; i++) {
+        options[i] = strtok(NULL, "\n");
+    }
 
     // Create a new label with a question
-    GtkWidget *question_label = gtk_label_new("What is the capital of France?");
+    GtkWidget *question_label = gtk_label_new(question);
     gtk_widget_set_name(question_label, "question-label");
 
     // Create a grid for the answer buttons
@@ -111,10 +152,10 @@ void render_question(GtkButton *button, gpointer GameData) {
     gtk_grid_set_column_spacing(GTK_GRID(grid), 70);
 
     // Create answer buttons
-    GtkWidget *btn1 = gtk_button_new_with_label("Berlin");
-    GtkWidget *btn2 = gtk_button_new_with_label("Madrid");
-    GtkWidget *btn3 = gtk_button_new_with_label("Paris");
-    GtkWidget *btn4 = gtk_button_new_with_label("Rome");
+    GtkWidget *btn1 = gtk_button_new_with_label(options[0]);
+    GtkWidget *btn2 = gtk_button_new_with_label(options[1]);
+    GtkWidget *btn3 = gtk_button_new_with_label(options[2]);
+    GtkWidget *btn4 = gtk_button_new_with_label(options[3]);
     gtk_widget_set_size_request(btn1, 150, -1);
     gtk_widget_set_size_request(btn2, 150, -1);
     // Add buttons to the grid
