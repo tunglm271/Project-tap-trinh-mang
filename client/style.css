@@ -11,16 +11,6 @@ label {
     font-weight: bold;
 }
 
-#callFriend {
-    background: transparent;
-    background-image: url('assets/phone.svg');
-    background-size: contain;
-    background-repeat: no-repeat;               
-    background-position: center;
-    border: 1px solid white;
-    border-radius: 50%;  
-}
-
 button {
     background: radial-gradient(circle, #4A90E2 40%, #003366 100%);
 }
@@ -48,9 +38,47 @@ button > label {
     border-left: white 1px solid;
 }
 
+
 #question_section {
     margin-top: 200px; 
     margin-bottom: 10px; 
+}
+
+.helpOption {
+    border-left: white 1px solid;
+    background-size: contain;
+    background-repeat: no-repeat;               
+    background-position: center;
+    border: 2px solid white;
+    border-radius: 50%;
+    background: transparent;
+    font-weight: bold;  
+}
+
+#callFriend {
+    background-image: url('assets/phone.svg');
+    background-size: contain;
+    background-repeat: no-repeat;               
+    background-position: center;
+    border: 2px solid white;
+    border-radius: 50%;  
+}
+
+#askPeople {
+    background-image: url('assets/people.svg');
+    background-size: contain;
+    background-repeat: no-repeat;               
+    background-position: center;
+    border: 2px solid white;
+    border-radius: 50%;  
+}
+
+#countdown-label {
+    font-size: 20px;
+    background-image: url('assets/clock.svg');
+    background-size: cover;               
+    background-position: center;
+    padding: 10px;
 }
 
 #question-label {
