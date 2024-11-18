@@ -1,4 +1,8 @@
 #include "app_function.h"
+#include <gst/gst.h>
+#include <unistd.h>
+#include <string.h>
+#include <limits.h>
 
 void load_css(GtkWidget *widget) {
     // Create a new CSS provider
@@ -39,6 +43,37 @@ void remove_all_children(GtkContainer *container) {
 void add_css_class_to_widget(GtkWidget *widget, const gchar *css_class) {
     GtkStyleContext *context = gtk_widget_get_style_context(widget);
     gtk_style_context_add_class(context, css_class);
+}
+
+void play_sound_effect(const char *file_path) {
+    GError *error = NULL;
+    GstElement *pipeline;
+
+    // Initialize GStreamer
+    gst_init(NULL, NULL);
+
+    // Create a pipeline to play the sound
+    char pipeline_description[256];
+    snprintf(pipeline_description, sizeof(pipeline_description), "playbin uri=file://%s", file_path);
+
+    pipeline = gst_parse_launch(pipeline_description, &error);
+    if (!pipeline) {
+        g_printerr("Failed to create pipeline: %s\n", error->message);
+        g_error_free(error);
+        return;
+    }
+
+    // Start playing the audio
+    gst_element_set_state(pipeline, GST_STATE_PLAYING);
+
+    // Wait until playback finishes
+    GstBus *bus = gst_element_get_bus(pipeline);
+    gst_bus_poll(bus, GST_MESSAGE_EOS, -1);
+    gst_object_unref(bus);
+
+    // Clean up the pipeline
+    gst_element_set_state(pipeline, GST_STATE_NULL);
+    gst_object_unref(pipeline);
 }
 
 gboolean update_countdown(gpointer user_data) {
@@ -287,7 +322,17 @@ void activate(GtkApplication *app, gpointer user_data) {
 
     // Add the box container to the window
     gtk_container_add(GTK_CONTAINER(window), box);
-
     // Show all widgets in the window
     gtk_widget_show_all(window);
+
+    char cwd[PATH_MAX];  // Store current working directory
+    char sound_path[PATH_MAX * 2];  // To store the full path of the sound file
+
+    if (getcwd(cwd, sizeof(cwd)) != NULL) {
+        printf("Current working directory: %s\n", cwd);
+        snprintf(sound_path, sizeof(sound_path), "%s/%s", cwd, "client/assets/intro.ogg");
+        play_sound_effect(sound_path);
+    } else {
+        perror("getcwd() error");
+    }
 }

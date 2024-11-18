@@ -1,7 +1,7 @@
 # Biến
 CC = gcc
 CFLAGS = -Wall
-LDFLAGS = `pkg-config --libs --cflags gtk+-3.0`
+LDFLAGS = `pkg-config --libs --cflags gtk+-3.0 gstreamer-1.0`
 CLIENT = client
 OUTPUT = $(CLIENT)/app
 PROG = app
