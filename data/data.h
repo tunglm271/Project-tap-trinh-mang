@@ -14,4 +14,7 @@ typedef struct {
 // Function to load questions from a file
 void loadQuestions(const char *filename, Quiz quizArray[], int *count, int level);
 
+int addUserToFile(const char *filename, const char *username, const char *password, const char *email);
+int login(const char *filename, const char *username, const char *password);
+
 #endif // QUIZ_LIBRARY_H
