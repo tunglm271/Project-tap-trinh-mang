@@ -36,6 +36,11 @@ void remove_all_children(GtkContainer *container) {
     g_list_free(children);
 }
 
+void add_css_class_to_widget(GtkWidget *widget, const gchar *css_class) {
+    GtkStyleContext *context = gtk_widget_get_style_context(widget);
+    gtk_style_context_add_class(context, css_class);
+}
+
 void render_question(GtkButton *button, gpointer GameData) {
     // Extract box from user_data (user_data is the same as before)
     gpointer *data = (gpointer *)GameData;
@@ -89,19 +94,33 @@ void render_question(GtkButton *button, gpointer GameData) {
     // Add content to the money list box
     // =============================
 
-    // Example money list labels
-    GtkWidget *money_label1 = gtk_label_new("15. $1,000,000");
-    GtkWidget *money_label2 = gtk_label_new("14. $500,000");
-    GtkWidget *money_label3 = gtk_label_new("13. $250,000");
-    GtkWidget *money_label4 = gtk_label_new("12. $125,000");
-    GtkWidget *money_label5 = gtk_label_new("11. $64,000");
+    GtkWidget* helpButton = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+    GtkWidget* callFriend =  gtk_button_new_with_label("");
+    gtk_widget_set_name(callFriend,"callFriend");
+    gtk_box_pack_start(GTK_BOX(helpButton), callFriend, FALSE, FALSE, 10);
+    gtk_box_pack_start(GTK_BOX(money_section), helpButton, FALSE, FALSE, 5);
 
-    // Add money list labels to the money list box
-    gtk_box_pack_start(GTK_BOX(money_section), money_label1, FALSE, FALSE, 5);
-    gtk_box_pack_start(GTK_BOX(money_section), money_label2, FALSE, FALSE, 5);
-    gtk_box_pack_start(GTK_BOX(money_section), money_label3, FALSE, FALSE, 5);
-    gtk_box_pack_start(GTK_BOX(money_section), money_label4, FALSE, FALSE, 5);
-    gtk_box_pack_start(GTK_BOX(money_section), money_label5, FALSE, FALSE, 5);
+
+    const char *money_labels[] = {
+        "15. 150.000.000", "14. 85.000.000", "13. 60.000.000", 
+        "12. 40.000.000", "11. 30.000.000", "10. 22.000.000", 
+        "9. 14.000.000", "8. 10.000.000", "7. 6.000.000", 
+        "6. 3.000.000", "5. 2.000.000", "4. 1.000.000", 
+        "3. 600.000", "2. 400.000", "1. 200.000"
+    };
+
+    // Create and pack the labels into the box
+    for (int i = 0; i < 15; i++) {
+        GtkWidget *money_label = gtk_label_new(money_labels[i]);
+        
+        // Add CSS class to specific labels
+        if (i == 0 || i == 5 || i == 10) {
+            add_css_class_to_widget(money_label, "milestone");
+        }
+
+        // Pack the label into the money section
+        gtk_box_pack_start(GTK_BOX(money_section), money_label, FALSE, FALSE, 5);
+    }
 
     // =============================
     // Add both sub-boxes to the main box
@@ -197,7 +216,7 @@ void activate(GtkApplication *app, gpointer user_data) {
 
     // Connect the submit button click event to the on_submit_clicked callback
     g_signal_connect(submit_btn, "clicked", G_CALLBACK(submit_name), data);
-
+    g_signal_connect(entry, "activate", G_CALLBACK(submit_name), data);
     // Add the label, entry, and button to the box container
     gtk_box_pack_start(GTK_BOX(box), label, FALSE, FALSE, 0);  // Add the "Enter your name" label
     gtk_box_pack_start(GTK_BOX(box), entry, FALSE, FALSE, 0);  // Add the text entry field

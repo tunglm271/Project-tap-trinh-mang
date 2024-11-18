@@ -5,7 +5,7 @@ LDFLAGS = `pkg-config --libs --cflags gtk+-3.0`
 CLIENT = client
 OUTPUT = $(CLIENT)/app
 PROG = app
-SOURCES = $(CLIENT)/$(PROG).c $(CLIENT)/app_function.c
+SOURCES = $(CLIENT)/$(PROG).c $(CLIENT)/app_function.c 
 
 # Mục tiêu mặc định
 all: $(OUTPUT)

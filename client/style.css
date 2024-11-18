@@ -11,6 +11,16 @@ label {
     font-weight: bold;
 }
 
+#callFriend {
+    background: transparent;
+    background-image: url('assets/phone.svg');
+    background-size: contain;
+    background-repeat: no-repeat;               
+    background-position: center;
+    border: 1px solid white;
+    border-radius: 50%;  
+}
+
 button {
     background: radial-gradient(circle, #4A90E2 40%, #003366 100%);
 }
@@ -39,7 +49,7 @@ button > label {
 }
 
 #question_section {
-    margin-top: 100px; 
+    margin-top: 200px; 
     margin-bottom: 10px; 
 }
 
@@ -47,4 +57,9 @@ button > label {
     background: radial-gradient(circle, #4A90E2 40%, #003366 100%);
     padding: 10px;
     border: #C0C0C0 3px solid;
+}
+
+.milestone {
+    font-size: large;
+    color: yellow;
 }
