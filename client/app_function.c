@@ -12,6 +12,28 @@
 
 #define PORT 8080
 #define BUFFER_SIZE 1024
+int sock;
+struct sockaddr_in serv_addr;
+
+void create_app_socket() {
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        printf("Socket creation error\n");
+        return;
+    }
+
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(PORT);
+
+    if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0) {
+        printf("Invalid address/ Address not supported \n");
+        return ;
+    }
+
+    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
+        printf("Connection Failed \n");
+        return ;
+    }
+}
 
 void load_css(GtkWidget *widget) {
     // Create a new CSS provider
@@ -105,8 +127,6 @@ void render_question(GtkButton *button, gpointer GameData) {
     gpointer *data = (gpointer *)GameData;
     GtkWidget *main_box = (GtkWidget *)data[0];
 
-    int sock = 0;
-    struct sockaddr_in serv_addr;
     char buffer[BUFFER_SIZE] = {0};
     
 
@@ -146,24 +166,6 @@ void render_question(GtkButton *button, gpointer GameData) {
 
     // Start the countdown
     g_timeout_add(1000, (GSourceFunc)update_countdown, countdown_data);
-
-    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        printf("Socket creation error\n");
-        return;
-    }
-
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(PORT);
-
-    if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0) {
-        printf("Invalid address/ Address not supported \n");
-        return ;
-    }
-
-    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
-        printf("Connection Failed \n");
-        return ;
-    }
     
     memset(buffer, 0, BUFFER_SIZE); 
     recv(sock, buffer, BUFFER_SIZE, 0);
@@ -250,10 +252,6 @@ void render_question(GtkButton *button, gpointer GameData) {
         gtk_box_pack_start(GTK_BOX(money_section), money_label, FALSE, FALSE, 5);
     }
 
-    // =============================
-    // Add both sub-boxes to the main box
-    // =============================
-
     gtk_box_pack_start(GTK_BOX(main_box), question_section, TRUE, TRUE, 10);
     gtk_box_pack_start(GTK_BOX(main_box), money_section, FALSE, FALSE, 0);
     gtk_widget_show_all(main_box);
@@ -262,7 +260,6 @@ void render_question(GtkButton *button, gpointer GameData) {
 }
 
 void submit_name(GtkButton *button, gpointer user_data) {
-    // Extract box and entry from user_data (which is a pointer to a 2-element array)
     gpointer *data = (gpointer *)user_data;
     GtkWidget *box = (GtkWidget *)data[0];
     GtkEntry *name_input = (GtkEntry *)data[1];
@@ -298,6 +295,7 @@ void render_login(GtkButton *button, gpointer input_data) {
     GtkWidget *labelPassword = gtk_label_new("Enter password");
     GtkWidget *NameInput = gtk_entry_new();
     GtkWidget *PasswordInput = gtk_entry_new();
+    gtk_entry_set_visibility(GTK_ENTRY(PasswordInput), FALSE);
     GtkWidget *SubmitBtn = gtk_button_new_with_label("Login");
 
     gpointer *user_data = g_new(gpointer, 3);
@@ -315,6 +313,43 @@ void render_login(GtkButton *button, gpointer input_data) {
     gtk_box_pack_start(GTK_BOX(box), labelPassword, FALSE, FALSE, 0);  
     gtk_box_pack_start(GTK_BOX(box), PasswordInput, FALSE, FALSE, 0);  
     gtk_box_pack_start(GTK_BOX(box), SubmitBtn, FALSE, FALSE, 0); 
+
+    gtk_widget_show_all(box);  
+    g_free(data);
+}
+
+void render_register(GtkButton *button, gpointer input_data) {
+    gpointer *data = (gpointer *)input_data;
+    GtkWidget *box = (GtkWidget *)data[0];
+    remove_all_children(GTK_CONTAINER(box));
+
+    GtkWidget *labelUsername = gtk_label_new("Enter username:");
+    GtkWidget *labelPassword = gtk_label_new("Enter password:");
+    GtkWidget *labelConfirmPassword = gtk_label_new("Confirm password:");
+    GtkWidget *username_entry = gtk_entry_new();
+    GtkWidget *password_entry = gtk_entry_new();
+    gtk_entry_set_visibility(GTK_ENTRY(password_entry), FALSE); // Make the text invisible
+    GtkWidget *confirm_password_entry = gtk_entry_new();
+    gtk_entry_set_visibility(GTK_ENTRY(confirm_password_entry), FALSE); // Make the text invisible
+    GtkWidget *submit_btn = gtk_button_new_with_label("Register");
+
+    // gpointer *user_data = g_new(gpointer, 4);
+    // user_data[0] = box;
+    // user_data[1] = username_entry;
+    // user_data[2] = password_entry;
+    // user_data[3] = confirm_password_entry;
+
+    // Connect the submit button click event to the submit_register callback
+    // g_signal_connect(submit_btn, "clicked", G_CALLBACK(submit_register), user_data);
+    // g_signal_connect(confirm_password_entry, "activate", G_CALLBACK(submit_register), user_data);
+
+    gtk_box_pack_start(GTK_BOX(box), labelUsername, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(box), username_entry, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(box), labelPassword, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(box), password_entry, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(box), labelConfirmPassword, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(box), confirm_password_entry, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(box), submit_btn, FALSE, FALSE, 0);
 
     gtk_widget_show_all(box);  
     g_free(data);
@@ -360,7 +395,7 @@ void activate(GtkApplication *app, gpointer user_data) {
     g_signal_connect(loginButton, "clicked", G_CALLBACK(render_login), data);
     gtk_box_pack_start(GTK_BOX(box), loginButton, FALSE, FALSE, 0);  // Add the "Enter your name" label
     gtk_box_pack_start(GTK_BOX(box), signUpButton, FALSE, FALSE, 0);  // Add the text entry field
-
+    g_signal_connect(signUpButton, "clicked", G_CALLBACK(render_register), data);
     // Add the box container to the window
     gtk_container_add(GTK_CONTAINER(window), box);
     // Show all widgets in the window
@@ -368,7 +403,7 @@ void activate(GtkApplication *app, gpointer user_data) {
 
     char cwd[PATH_MAX];  // Store current working directory
     char sound_path[PATH_MAX * 2];  // To store the full path of the sound file
-
+    create_app_socket();
     if (getcwd(cwd, sizeof(cwd)) != NULL) {
         printf("Current working directory: %s\n", cwd);
         snprintf(sound_path, sizeof(sound_path), "%s/%s", cwd, "client/assets/intro.ogg");

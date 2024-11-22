@@ -23,6 +23,26 @@
 
 char *choice[] = {"A.", "B.", "C.", "D."};
 
+void handle_login_request(int client_socket) {
+    char buffer[MAX] = {0};
+    recv(client_socket, buffer, MAX, 0);
+    // Process login request (this is a placeholder, implement your login logic here)
+    printf("Received login request: %s\n", buffer);
+    // Send login response (success or failure)
+    const char *response = "Login successful\n";
+    send(client_socket, response, strlen(response), 0);
+}
+
+void handle_register_request(int client_socket) {
+    char buffer[MAX] = {0};
+    recv(client_socket, buffer, MAX, 0);
+    // Process register request (this is a placeholder, implement your register logic here)
+    printf("Received register request: %s\n", buffer);
+    // Send register response (success or failure)
+    const char *response = "Register successful\n";
+    send(client_socket, response, strlen(response), 0);
+}
+
 int main() {
     Quiz quizArray[MAX_QUESTIONS]; 
     int count = 0;
@@ -32,7 +52,7 @@ int main() {
     int addrlen = sizeof(address);
     char buffer[MAX] = {0};
 
-
+    
     loadQuestions("data/quiz_library_easy.txt", quizArray, &count, level);
     srand(time(0));
     int numberQuestion = (rand() % 40) + 1;
