@@ -259,6 +259,29 @@ void render_question(GtkButton *button, gpointer GameData) {
     g_free(data);
 }
 
+void render_loading(GtkButton *button, gpointer gameData) {
+    gpointer *data = (gpointer *)gameData;
+    GtkWidget *box = (GtkWidget *)data[0];
+    GtkWidget *spinner;
+    GtkWidget *label;
+
+    remove_all_children(GTK_CONTAINER(box));
+    label = gtk_label_new("Waiting for other players...");
+    gtk_box_pack_start(GTK_BOX(box), label, TRUE, TRUE, 0);
+    
+    // Create a spinner
+    spinner = gtk_spinner_new();
+    gtk_widget_set_name(spinner, "spinner");
+    gtk_box_pack_start(GTK_BOX(box), spinner, TRUE, TRUE, 0);
+
+    // Start the spinner
+    gtk_spinner_start(GTK_SPINNER(spinner));
+
+    // Show all widgets in the window
+    gtk_widget_show_all(box);
+    g_free(data);
+}
+
 void submit_name(GtkButton *button, gpointer user_data) {
     gpointer *data = (gpointer *)user_data;
     GtkWidget *box = (GtkWidget *)data[0];
@@ -277,11 +300,38 @@ void submit_name(GtkButton *button, gpointer user_data) {
     // Add the new label to the box
     gtk_box_pack_start(GTK_BOX(box), welcome_text, TRUE, TRUE, 10); // Add the label with expanding
     gtk_box_pack_start(GTK_BOX(box), start_btn, TRUE, FALSE, 0);
-    g_signal_connect(start_btn, "clicked", G_CALLBACK(render_question), gameData);
+    // g_signal_connect(start_btn, "clicked", G_CALLBACK(render_question), gameData);
+    g_signal_connect(start_btn, "clicked", G_CALLBACK(render_loading), gameData);
+    // Show the label
     // Show the label
     gtk_widget_show_all(box);  // Make sure the label is shown
 
     // Free the allocated data array
+    g_free(data);
+}
+
+
+void submit_register(GtkButton *button, gpointer register_data) {
+    gpointer *data = (gpointer *)register_data;
+    GtkWidget *box = (GtkWidget *)data[0];
+    GtkEntry *username_entry = (GtkEntry *)data[1];
+    GtkEntry *password_entry = (GtkEntry *)data[2];
+    GtkEntry *confirm_password_entry = (GtkEntry *)data[3];
+
+    const gchar *username = gtk_entry_get_text(username_entry);
+    const gchar *password = gtk_entry_get_text(password_entry);
+    const gchar *confirm_password = gtk_entry_get_text(confirm_password_entry);
+
+    if (strcmp(password, confirm_password) != 0) {
+        GtkWidget *error_label = gtk_label_new("Passwords do not match!");
+        gtk_box_pack_start(GTK_BOX(box), error_label, FALSE, FALSE, 0);
+        gtk_widget_show_all(box);
+    } else {
+        // Handle successful registration (e.g., send data to server)
+        g_print("Username: %s\n", username);
+        g_print("Password: %s\n", password);
+    }
+
     g_free(data);
 }
 
@@ -333,15 +383,14 @@ void render_register(GtkButton *button, gpointer input_data) {
     gtk_entry_set_visibility(GTK_ENTRY(confirm_password_entry), FALSE); // Make the text invisible
     GtkWidget *submit_btn = gtk_button_new_with_label("Register");
 
-    // gpointer *user_data = g_new(gpointer, 4);
-    // user_data[0] = box;
-    // user_data[1] = username_entry;
-    // user_data[2] = password_entry;
-    // user_data[3] = confirm_password_entry;
+    gpointer *register_data = g_new(gpointer, 4);
+    user_data[0] = box;
+    user_data[1] = username_entry;
+    user_data[2] = password_entry;
+    user_data[3] = confirm_password_entry;
 
-    // Connect the submit button click event to the submit_register callback
-    // g_signal_connect(submit_btn, "clicked", G_CALLBACK(submit_register), user_data);
-    // g_signal_connect(confirm_password_entry, "activate", G_CALLBACK(submit_register), user_data);
+    g_signal_connect(submit_btn, "clicked", G_CALLBACK(submit_register), user_data);
+    g_signal_connect(confirm_password_entry, "activate", G_CALLBACK(submit_register), user_data);
 
     gtk_box_pack_start(GTK_BOX(box), labelUsername, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(box), username_entry, FALSE, FALSE, 0);
@@ -410,8 +459,5 @@ void activate(GtkApplication *app, gpointer user_data) {
         play_sound_effect(sound_path);
     } else {
         perror("getcwd() error");
-    }
-    while(1) {
-        
     }
 }
