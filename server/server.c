@@ -102,16 +102,25 @@ int main() {
         printf("Client %d connected\n", client_count);
     }
     
-    for (int i = 0; i < client_count; i++)
-    {   
-       char buffer[MAX] = {0};
-       snprintf(buffer, MAX, "%s\n", quizArray[numberQuestion].question);
-       for (int i = 0; i < 4; i++) {
-          strncat(buffer, choice[i], MAX - strlen(buffer) - 1); 
-          strncat(buffer, quizArray[numberQuestion].option[i], MAX - strlen(buffer) - 1); 
-          strncat(buffer, "\n", MAX - strlen(buffer) - 1);
+    while(1) {
+    for(int i=0; i < MAX_CLIENTS; i++) {
+        memset(buffer, 0, MAX);
+        char username[50], password[50];
+        if(recv(client_sockets[i], buffer, MAX, 0) > 0) {
+          if(buffer[0] == 0x01) {
+            sscanf(buffer+1, "username:%[^;];password:%s", username, password);
+               if(login("data/user.txt", username, password) == 1) {
+                 memset(buffer, 0, MAX);
+                 buffer[0] = 0x02;
+                 send(client_sockets[i], buffer, MAX, 0);
+               } else { 
+                 memset(buffer, 0, MAX);
+                 buffer[0] = 0x03;
+                 send(client_sockets[i], buffer, MAX, 0);
+               }
+            }
+        }
        }
-       ssize_t count = send(client_sockets[i], buffer, MAX, 0);
     }
     
     close(server_fd);

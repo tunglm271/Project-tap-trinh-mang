@@ -12,8 +12,10 @@
 
 #define PORT 8080
 #define BUFFER_SIZE 1024
+
 int sock;
 struct sockaddr_in serv_addr;
+char buffer[BUFFER_SIZE] = {0};
 
 void create_app_socket() {
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -126,8 +128,6 @@ gboolean update_countdown(gpointer user_data) {
 void render_question(GtkButton *button, gpointer GameData) {
     gpointer *data = (gpointer *)GameData;
     GtkWidget *main_box = (GtkWidget *)data[0];
-
-    char buffer[BUFFER_SIZE] = {0};
     
 
     remove_all_children(GTK_CONTAINER(main_box));
@@ -287,11 +287,22 @@ void submit_name(GtkButton *button, gpointer user_data) {
     GtkWidget *box = (GtkWidget *)data[0];
     GtkEntry *name_input = (GtkEntry *)data[1];
     GtkEntry *password_input = (GtkEntry *)data[2];
-    const gchar *text = gtk_entry_get_text(name_input);  // Get the text from the entry
+    const gchar *username = gtk_entry_get_text(name_input);  // Get the text from the entry
+    const gchar *password = gtk_entry_get_text(password_input);
+    buffer[0] = 0x01;
+    sprintf(buffer+1, "username:%s;password:%s", username, password);
+    send(sock, buffer, BUFFER_SIZE, 0);
+    
+    memset(buffer, 0, BUFFER_SIZE);
+    recv(sock, buffer, BUFFER_SIZE, 0);
+    if(buffer[0] == 0x02) {
+      printf("trung\n");
+    } else printf("khong trung\n");
+ 
     GtkWidget *welcome_text = gtk_label_new(NULL);  // Create a new label
     GtkWidget *start_btn = gtk_button_new_with_label("Start game");
     // Set the label text to "Welcome [text from entry]"
-    gtk_label_set_text(GTK_LABEL(welcome_text), g_strdup_printf("Welcome %s", text));
+    gtk_label_set_text(GTK_LABEL(welcome_text), g_strdup_printf("Welcome %s", username));
     gtk_widget_set_name(welcome_text, "welcome-text");
     remove_all_children(GTK_CONTAINER(box));
 
@@ -305,7 +316,7 @@ void submit_name(GtkButton *button, gpointer user_data) {
     // Show the label
     // Show the label
     gtk_widget_show_all(box);  // Make sure the label is shown
-
+    
     // Free the allocated data array
     g_free(data);
 }
@@ -353,6 +364,7 @@ void render_login(GtkButton *button, gpointer input_data) {
     user_data[1] = NameInput;
     user_data[2] = PasswordInput;
 
+
     // Connect the submit button click event to the on_submit_clicked callback
     g_signal_connect(SubmitBtn, "clicked", G_CALLBACK(submit_name), user_data);
     g_signal_connect(PasswordInput, "activate", G_CALLBACK(submit_name), user_data);
@@ -363,7 +375,7 @@ void render_login(GtkButton *button, gpointer input_data) {
     gtk_box_pack_start(GTK_BOX(box), labelPassword, FALSE, FALSE, 0);  
     gtk_box_pack_start(GTK_BOX(box), PasswordInput, FALSE, FALSE, 0);  
     gtk_box_pack_start(GTK_BOX(box), SubmitBtn, FALSE, FALSE, 0); 
-
+    
     gtk_widget_show_all(box);  
     g_free(data);
 }
