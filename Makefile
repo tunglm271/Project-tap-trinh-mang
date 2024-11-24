@@ -1,7 +1,8 @@
 # Biến
 CC = gcc
 CFLAGS = -Wall
-LDFLAGS = `pkg-config --libs --cflags gtk+-3.0 gstreamer-1.0`
+PKG_CONFIG_FLAGS = `pkg-config --libs --cflags gtk+-3.0 gstreamer-1.0`
+LDFLAGS = -luuid
 CLIENT = client
 OUTPUT = $(CLIENT)/app
 PROG = app
@@ -13,7 +14,7 @@ all: $(OUTPUT)
 
 # Quy tắc biên dịch và liên kết tệp để tạo myapp trong thư mục client
 $(OUTPUT): $(SOURCES)
-	$(CC) $(SOURCES) -o $(OUTPUT) $(LDFLAGS)
+	$(CC) $(SOURCES) -o $(OUTPUT) $(PKG_CONFIG_FLAGS) $(LDFLAGS)
 
 # Quy tắc làm sạch
 clean:

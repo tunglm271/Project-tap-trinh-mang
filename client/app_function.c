@@ -17,7 +17,7 @@ struct sockaddr_in serv_addr;
 
 void create_app_socket() {
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        printf("Socket creation error\n");
+        g_print("Socket creation error\n");
         return;
     }
 
@@ -25,12 +25,12 @@ void create_app_socket() {
     serv_addr.sin_port = htons(PORT);
 
     if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0) {
-        printf("Invalid address/ Address not supported \n");
+        g_print("Invalid address/ Address not supported \n");
         return ;
     }
 
     if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
-        printf("Connection Failed \n");
+        g_print("Connection Failed \n");
         return ;
     }
 }
@@ -405,10 +405,13 @@ void activate(GtkApplication *app, gpointer user_data) {
     char sound_path[PATH_MAX * 2];  // To store the full path of the sound file
     create_app_socket();
     if (getcwd(cwd, sizeof(cwd)) != NULL) {
-        printf("Current working directory: %s\n", cwd);
+        g_print("Current working directory: %s\n", cwd);
         snprintf(sound_path, sizeof(sound_path), "%s/%s", cwd, "client/assets/intro.ogg");
         play_sound_effect(sound_path);
     } else {
         perror("getcwd() error");
+    }
+    while(1) {
+        
     }
 }
