@@ -125,6 +125,15 @@ int main() {
                  buffer[0] = 0x06;
                  send(client_sockets[client_count], buffer, MAX, 0);
               }
+           } else if (buffer[0] == 0x07) {
+                memset(buffer, 0, MAX);
+                snprintf(buffer, MAX, "%s\n", quizArray[numberQuestion].question);
+                for (int i = 0; i < 4; i++) {
+                   strncat(buffer, choice[i], MAX - strlen(buffer) - 1); 
+                   strncat(buffer, quizArray[numberQuestion].option[i], MAX - strlen(buffer) - 1); 
+                   strncat(buffer, "\n", MAX - strlen(buffer) - 1);
+                }
+                send(client_sockets[client_count], buffer, MAX, 0);
            } 
         }
         

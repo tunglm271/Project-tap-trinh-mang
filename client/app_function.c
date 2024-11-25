@@ -77,9 +77,12 @@ void render_question(GtkButton *button, gpointer GameData) {
     // Start the countdown
     g_timeout_add(1000, (GSourceFunc)update_countdown, countdown_data);
     
-    memset(buffer, 0, BUFFER_SIZE); 
+    memset(buffer, 0, BUFFER_SIZE);
+    buffer[0] = 0x07;
+    send(sock, buffer, BUFFER_SIZE, 0);
+    
+    memset(buffer, 0, BUFFER_SIZE);
     recv(sock, buffer, BUFFER_SIZE, 0);
-    close(sock);
     
     char *question = strtok(buffer, "\n"); 
     char *options[4];
@@ -203,7 +206,6 @@ void submit_name(GtkButton *button, gpointer user_data) {
     memset(buffer, 0, BUFFER_SIZE);
     buffer[0] = 0x01;
     sprintf(buffer+1, "username:%s;password:%s", username, password);
-    printf("%s",buffer);
     send(sock, buffer, BUFFER_SIZE, 0);
     
     memset(buffer, 0, BUFFER_SIZE);
@@ -232,7 +234,7 @@ void render_welcome_page(GtkBox *box, const gchar *username) {
     gameData[0] = box;
     gtk_box_pack_start(GTK_BOX(box), welcome_text, TRUE, TRUE, 10);
     gtk_box_pack_start(GTK_BOX(box), start_btn, TRUE, FALSE, 0);
-    g_signal_connect(start_btn, "clicked", G_CALLBACK(render_loading), gameData);
+    g_signal_connect(start_btn, "clicked", G_CALLBACK(render_question), gameData);
     gtk_widget_show_all(GTK_WIDGET(box));  
 }
 
