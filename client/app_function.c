@@ -35,6 +35,26 @@ gboolean update_countdown(gpointer user_data) {
     }
 }
 
+void handle_answer(GtkButton *button, gpointer answerData) {
+    int answer = GPOINTER_TO_INT(answerData);
+    printf("Answer chosen: %d\n", answer);
+    // memset(buffer, 0, BUFFER_SIZE);
+    // buffer[0] = 0x08;
+    // buffer[1] = answer_index;
+    // send(sock, buffer, BUFFER_SIZE, 0);
+
+    // memset(buffer, 0, BUFFER_SIZE);
+    // recv(sock, buffer, BUFFER_SIZE, 0);
+
+    // if (buffer[0] == 0x09) {
+    //     // Correct answer
+    //     g_print("Correct answer!\n");
+    // } else {
+    //     // Incorrect answer
+    //     g_print("Incorrect answer!\n");
+    // }
+}
+
 void render_question(GtkButton *button, gpointer GameData) {
     gpointer *data = (gpointer *)GameData;
     GtkWidget *main_box = (GtkWidget *)data[0];
@@ -77,9 +97,12 @@ void render_question(GtkButton *button, gpointer GameData) {
     // Start the countdown
     g_timeout_add(1000, (GSourceFunc)update_countdown, countdown_data);
     
-    memset(buffer, 0, BUFFER_SIZE); 
+    memset(buffer, 0, BUFFER_SIZE);
+    buffer[0] = 0x07;
+    send(sock, buffer, BUFFER_SIZE, 0);
+    
+    memset(buffer, 0, BUFFER_SIZE);
     recv(sock, buffer, BUFFER_SIZE, 0);
-    close(sock);
     
     char *question = strtok(buffer, "\n"); 
     char *options[4];
@@ -102,6 +125,7 @@ void render_question(GtkButton *button, gpointer GameData) {
     for (int i = 0; i < 4; i++) {
         buttons[i] = gtk_button_new_with_label(options[i]);
         gtk_widget_set_size_request(buttons[i], 150, -1);
+        g_signal_connect(buttons[i], "clicked", G_CALLBACK(handle_answer), GINT_TO_POINTER(i));
         gtk_grid_attach(GTK_GRID(grid), buttons[i], i % 2, i / 2, 1, 1);
     }
 
@@ -227,6 +251,7 @@ void render_welcome_page(GtkBox *box, const gchar *username) {
     gameData[0] = box;
     gtk_box_pack_start(GTK_BOX(box), welcome_text, TRUE, TRUE, 10);
     gtk_box_pack_start(GTK_BOX(box), start_btn, TRUE, FALSE, 0);
+    g_signal_connect(start_btn, "clicked", G_CALLBACK(render_question), gameData);
     g_signal_connect(start_btn, "clicked", G_CALLBACK(render_question), gameData);
     gtk_widget_show_all(GTK_WIDGET(box));  
 }
