@@ -210,6 +210,7 @@ void submit_name(GtkButton *button, gpointer user_data) {
         printf("dang nhap thanh cong\n");
         render_welcome_page(GTK_BOX(box), username);
     } else {
+        remove_child_by_name(GTK_CONTAINER(box), "error-label");
         GtkWidget *error_label = gtk_label_new("username or password is incorrect!");
         gtk_widget_set_name(error_label, "error-label");
         gtk_box_pack_start(GTK_BOX(box), error_label, FALSE, FALSE, 0);

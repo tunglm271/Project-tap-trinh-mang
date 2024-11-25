@@ -52,6 +52,17 @@ void remove_all_children(GtkContainer *container) {
     g_list_free(children);
 }
 
+void remove_child_by_name(GtkContainer *container, const gchar *name) {
+    GList *children = gtk_container_get_children(container);
+    for (GList *iter = children; iter != NULL; iter = iter->next) {
+        GtkWidget *child = GTK_WIDGET(iter->data);
+        if (g_strcmp0(gtk_widget_get_name(child), name) == 0) {
+            gtk_widget_destroy(child);
+        }
+    }
+    g_list_free(children);
+}
+
 void add_css_class_to_widget(GtkWidget *widget, const gchar *css_class) {
     GtkStyleContext *context = gtk_widget_get_style_context(widget);
     gtk_style_context_add_class(context, css_class);
