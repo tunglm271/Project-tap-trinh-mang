@@ -101,7 +101,7 @@ int main() {
         
         memset(buffer, 0, MAX);
         char username[50], password[50];
-        if(recv(client_sockets[client_count], buffer, MAX, 0) > 0) {
+        while(recv(client_sockets[client_count], buffer, MAX, 0) > 0) {
           if(buffer[0] == 0x01) {
             sscanf(buffer+1, "username:%[^;];\npassword:%s\n", username, password);
                if(login("data/user.txt", username, password) == 1) {
@@ -114,6 +114,18 @@ int main() {
                  send(client_sockets[client_count], buffer, MAX, 0);
                }
             }
+           else if (buffer[0] == 0x04) {
+              sscanf(buffer+1, "username:%[^;];\npassword:%s\n", username, password);
+              if(addUserToFile("data/user.txt", username, password, "anh@gmail.com") == 1) {
+                 memset(buffer, 0, MAX);
+                 buffer[0] = 0x05;
+                 send(client_sockets[client_count], buffer, MAX, 0);
+              } else {
+                 memset(buffer, 0, MAX);
+                 buffer[0] = 0x06;
+                 send(client_sockets[client_count], buffer, MAX, 0);
+              }
+           } 
         }
         
         client_count++;
