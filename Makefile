@@ -6,7 +6,7 @@ LDFLAGS = -luuid
 CLIENT = client
 OUTPUT = $(CLIENT)/app
 PROG = app
-SOURCES = $(CLIENT)/$(PROG).c $(CLIENT)/app_function.c 
+SOURCES = $(CLIENT)/$(PROG).c $(CLIENT)/app_function.c $(CLIENT)/utils.c
 
 # Mục tiêu mặc định
 all: $(OUTPUT)

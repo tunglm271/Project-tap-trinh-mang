@@ -85,6 +85,12 @@ button > label {
     color: white;
 }
 
+#error-label {
+    color: red;
+    font-size: large;
+    background-color: white;
+}
+
 #question-label {
     background: radial-gradient(circle, #4A90E2 40%, #003366 100%);
     padding: 10px;

@@ -108,7 +108,7 @@ int main() {
         char username[50], password[50];
         if(recv(client_sockets[i], buffer, MAX, 0) > 0) {
           if(buffer[0] == 0x01) {
-            sscanf(buffer+1, "username:%[^;];password:%s", username, password);
+            sscanf(buffer+1, "username:%[^;];\npassword:%s\n", username, password);
                if(login("data/user.txt", username, password) == 1) {
                  memset(buffer, 0, MAX);
                  buffer[0] = 0x02;

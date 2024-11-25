@@ -1,13 +1,11 @@
 #include "app_function.h"
-#include <gst/gst.h>
+#include "utils.h"
 #include <unistd.h>
 #include <string.h>
 #include <limits.h>
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <arpa/inet.h>
 
 #define PORT 8080
@@ -15,99 +13,11 @@
 
 int sock;
 struct sockaddr_in serv_addr;
+
 char buffer[BUFFER_SIZE] = {0};
 
-void create_app_socket() {
-    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        g_print("Socket creation error\n");
-        return;
-    }
 
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(PORT);
-
-    if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0) {
-        g_print("Invalid address/ Address not supported \n");
-        return ;
-    }
-
-    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
-        g_print("Connection Failed \n");
-        return ;
-    }
-}
-
-void load_css(GtkWidget *widget) {
-    // Create a new CSS provider
-    GtkCssProvider *provider = gtk_css_provider_new();
-
-    // Load the CSS from the file
-    GFile *css_file = g_file_new_for_path("client/style.css");
-    gtk_css_provider_load_from_file(provider, css_file, NULL);
-    g_object_unref(css_file);
-
-    // Get the default display and screen
-    GdkDisplay *display = gdk_display_get_default();
-    if (display) {
-        GdkScreen *screen = gdk_display_get_default_screen(display);
-        if (screen) {
-            // Apply the CSS provider to the screen's style context
-            gtk_style_context_add_provider_for_screen(
-                screen,
-                GTK_STYLE_PROVIDER(provider),
-                GTK_STYLE_PROVIDER_PRIORITY_USER
-            );
-        }
-    }
-
-    // Clean up the CSS provider
-    g_object_unref(provider);
-}
-
-
-void remove_all_children(GtkContainer *container) {
-    GList *children = gtk_container_get_children(container);
-    for (GList *iter = children; iter != NULL; iter = iter->next) {
-        gtk_widget_destroy(GTK_WIDGET(iter->data));
-    }
-    g_list_free(children);
-}
-
-void add_css_class_to_widget(GtkWidget *widget, const gchar *css_class) {
-    GtkStyleContext *context = gtk_widget_get_style_context(widget);
-    gtk_style_context_add_class(context, css_class);
-}
-
-void play_sound_effect(const char *file_path) {
-    GError *error = NULL;
-    GstElement *pipeline;
-
-    // Initialize GStreamer
-    gst_init(NULL, NULL);
-
-    // Create a pipeline to play the sound
-    char pipeline_description[256];
-    snprintf(pipeline_description, sizeof(pipeline_description), "playbin uri=file://%s", file_path);
-
-    pipeline = gst_parse_launch(pipeline_description, &error);
-    if (!pipeline) {
-        g_printerr("Failed to create pipeline: %s\n", error->message);
-        g_error_free(error);
-        return;
-    }
-
-    // Start playing the audio
-    gst_element_set_state(pipeline, GST_STATE_PLAYING);
-
-    // Wait until playback finishes
-    GstBus *bus = gst_element_get_bus(pipeline);
-    gst_bus_poll(bus, GST_MESSAGE_EOS, -1);
-    gst_object_unref(bus);
-
-    // Clean up the pipeline
-    gst_element_set_state(pipeline, GST_STATE_NULL);
-    gst_object_unref(pipeline);
-}
+void render_welcome_page(GtkBox *box, const gchar *username);
 
 gboolean update_countdown(gpointer user_data) {
     CountdownData *data = (CountdownData *)user_data;
@@ -291,34 +201,37 @@ void submit_name(GtkButton *button, gpointer user_data) {
     const gchar *password = gtk_entry_get_text(password_input);
     buffer[0] = 0x01;
     sprintf(buffer+1, "username:%s;password:%s", username, password);
+    printf("%s",buffer);
     send(sock, buffer, BUFFER_SIZE, 0);
     
     memset(buffer, 0, BUFFER_SIZE);
     recv(sock, buffer, BUFFER_SIZE, 0);
     if(buffer[0] == 0x02) {
-      printf("trung\n");
-    } else printf("khong trung\n");
+        printf("dang nhap thanh cong\n");
+        render_welcome_page(GTK_BOX(box), username);
+    } else {
+        GtkWidget *error_label = gtk_label_new("username or password is incorrect!");
+        gtk_widget_set_name(error_label, "error-label");
+        gtk_box_pack_start(GTK_BOX(box), error_label, FALSE, FALSE, 0);
+        gtk_widget_show_all(box);
+    }
  
-    GtkWidget *welcome_text = gtk_label_new(NULL);  // Create a new label
+    g_free(data);
+}
+
+void render_welcome_page(GtkBox *box, const gchar *username) {
+    GtkWidget *welcome_text = gtk_label_new(NULL); 
     GtkWidget *start_btn = gtk_button_new_with_label("Start game");
-    // Set the label text to "Welcome [text from entry]"
     gtk_label_set_text(GTK_LABEL(welcome_text), g_strdup_printf("Welcome %s", username));
     gtk_widget_set_name(welcome_text, "welcome-text");
     remove_all_children(GTK_CONTAINER(box));
 
     gpointer *gameData = g_new(gpointer, 1);
     gameData[0] = box;
-    // Add the new label to the box
-    gtk_box_pack_start(GTK_BOX(box), welcome_text, TRUE, TRUE, 10); // Add the label with expanding
+    gtk_box_pack_start(GTK_BOX(box), welcome_text, TRUE, TRUE, 10);
     gtk_box_pack_start(GTK_BOX(box), start_btn, TRUE, FALSE, 0);
-    // g_signal_connect(start_btn, "clicked", G_CALLBACK(render_question), gameData);
     g_signal_connect(start_btn, "clicked", G_CALLBACK(render_loading), gameData);
-    // Show the label
-    // Show the label
-    gtk_widget_show_all(box);  // Make sure the label is shown
-    
-    // Free the allocated data array
-    g_free(data);
+    gtk_widget_show_all(GTK_WIDGET(box));  
 }
 
 
@@ -396,13 +309,13 @@ void render_register(GtkButton *button, gpointer input_data) {
     GtkWidget *submit_btn = gtk_button_new_with_label("Register");
 
     gpointer *register_data = g_new(gpointer, 4);
-    user_data[0] = box;
-    user_data[1] = username_entry;
-    user_data[2] = password_entry;
-    user_data[3] = confirm_password_entry;
+    register_data[0] = box;
+    register_data[1] = username_entry;
+    register_data[2] = password_entry;
+    register_data[3] = confirm_password_entry;
 
-    g_signal_connect(submit_btn, "clicked", G_CALLBACK(submit_register), user_data);
-    g_signal_connect(confirm_password_entry, "activate", G_CALLBACK(submit_register), user_data);
+    g_signal_connect(submit_btn, "clicked", G_CALLBACK(submit_register), register_data);
+    g_signal_connect(confirm_password_entry, "activate", G_CALLBACK(submit_register), register_data);
 
     gtk_box_pack_start(GTK_BOX(box), labelUsername, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(box), username_entry, FALSE, FALSE, 0);
@@ -464,7 +377,7 @@ void activate(GtkApplication *app, gpointer user_data) {
 
     char cwd[PATH_MAX];  // Store current working directory
     char sound_path[PATH_MAX * 2];  // To store the full path of the sound file
-    create_app_socket();
+    create_app_socket(&sock, &serv_addr);
     if (getcwd(cwd, sizeof(cwd)) != NULL) {
         g_print("Current working directory: %s\n", cwd);
         snprintf(sound_path, sizeof(sound_path), "%s/%s", cwd, "client/assets/intro.ogg");
