@@ -11,7 +11,7 @@
 #include "data/data.h"
 
 #define PORT 8080
-#define MAX_CLIENTS 2
+#define MAX_CLIENTS 1
 #define MAX 1024
 
 #define MAX_QUESTIONS 100
