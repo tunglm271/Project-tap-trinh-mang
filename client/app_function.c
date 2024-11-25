@@ -98,18 +98,12 @@ void render_question(GtkButton *button, gpointer GameData) {
     gtk_grid_set_row_spacing(GTK_GRID(grid), 30);
     gtk_grid_set_column_spacing(GTK_GRID(grid), 70);
 
-    // Create answer buttons
-    GtkWidget *btn1 = gtk_button_new_with_label(options[0]);
-    GtkWidget *btn2 = gtk_button_new_with_label(options[1]);
-    GtkWidget *btn3 = gtk_button_new_with_label(options[2]);
-    GtkWidget *btn4 = gtk_button_new_with_label(options[3]);
-    gtk_widget_set_size_request(btn1, 150, -1);
-    gtk_widget_set_size_request(btn2, 150, -1);
-    // Add buttons to the grid
-    gtk_grid_attach(GTK_GRID(grid), btn1, 0, 0, 1, 1);
-    gtk_grid_attach(GTK_GRID(grid), btn2, 1, 0, 1, 1);
-    gtk_grid_attach(GTK_GRID(grid), btn3, 0, 1, 1, 1);
-    gtk_grid_attach(GTK_GRID(grid), btn4, 1, 1, 1, 1);
+    GtkWidget *buttons[4];
+    for (int i = 0; i < 4; i++) {
+        buttons[i] = gtk_button_new_with_label(options[i]);
+        gtk_widget_set_size_request(buttons[i], 150, -1);
+        gtk_grid_attach(GTK_GRID(grid), buttons[i], i % 2, i / 2, 1, 1);
+    }
 
     // Pack the question label and grid into the question box
     gtk_box_pack_start(GTK_BOX(question_section), question_label, FALSE, FALSE, 10);
@@ -193,17 +187,17 @@ void render_loading(GtkButton *button, gpointer gameData) {
 }
 
 void submit_name(GtkButton *button, gpointer user_data) {
+    g_print("submit_name\n");
     gpointer *data = (gpointer *)user_data;
     GtkWidget *box = (GtkWidget *)data[0];
     GtkEntry *name_input = (GtkEntry *)data[1];
     GtkEntry *password_input = (GtkEntry *)data[2];
-    const gchar *username = gtk_entry_get_text(name_input);  // Get the text from the entry
+    const gchar *username = gtk_entry_get_text(name_input);
     const gchar *password = gtk_entry_get_text(password_input);
-    
     memset(buffer, 0, BUFFER_SIZE);
     buffer[0] = 0x01;
     sprintf(buffer+1, "username:%s;password:%s", username, password);
-    printf("%s",buffer);
+    g_print("%s\n",buffer);
     send(sock, buffer, BUFFER_SIZE, 0);
     
     memset(buffer, 0, BUFFER_SIZE);
@@ -233,7 +227,7 @@ void render_welcome_page(GtkBox *box, const gchar *username) {
     gameData[0] = box;
     gtk_box_pack_start(GTK_BOX(box), welcome_text, TRUE, TRUE, 10);
     gtk_box_pack_start(GTK_BOX(box), start_btn, TRUE, FALSE, 0);
-    g_signal_connect(start_btn, "clicked", G_CALLBACK(render_loading), gameData);
+    g_signal_connect(start_btn, "clicked", G_CALLBACK(render_question), gameData);
     gtk_widget_show_all(GTK_WIDGET(box));  
 }
 
