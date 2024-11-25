@@ -10,8 +10,8 @@
 
 #include "data/data.h"
 
-#define PORT 8080
-#define MAX_CLIENTS 1
+#define PORT 8080 
+#define MAX_CLIENTS 10 
 #define MAX 1024
 
 #define MAX_QUESTIONS 100
@@ -87,7 +87,7 @@ int main() {
     printf("Server is listening...\n");
     
     int client_count = 0;
-    while (client_count < MAX_CLIENTS)
+    while (1)
     {
         if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0)
         {
@@ -98,29 +98,25 @@ int main() {
         
         client_sockets[client_count] = new_socket;
         
-        client_count++;
-        printf("Client %d connected\n", client_count);
-    }
-    
-    while(1) {
-    for(int i=0; i < MAX_CLIENTS; i++) {
         memset(buffer, 0, MAX);
         char username[50], password[50];
-        if(recv(client_sockets[i], buffer, MAX, 0) > 0) {
+        if(recv(client_sockets[client_count], buffer, MAX, 0) > 0) {
           if(buffer[0] == 0x01) {
             sscanf(buffer+1, "username:%[^;];password:%s", username, password);
                if(login("data/user.txt", username, password) == 1) {
                  memset(buffer, 0, MAX);
                  buffer[0] = 0x02;
-                 send(client_sockets[i], buffer, MAX, 0);
+                 send(client_sockets[client_count], buffer, MAX, 0);
                } else { 
                  memset(buffer, 0, MAX);
                  buffer[0] = 0x03;
-                 send(client_sockets[i], buffer, MAX, 0);
+                 send(client_sockets[client_count], buffer, MAX, 0);
                }
             }
         }
-       }
+        
+        client_count++;
+        printf("Client %d connected\n", client_count);
     }
     
     close(server_fd);

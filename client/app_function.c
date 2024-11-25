@@ -396,13 +396,13 @@ void render_register(GtkButton *button, gpointer input_data) {
     GtkWidget *submit_btn = gtk_button_new_with_label("Register");
 
     gpointer *register_data = g_new(gpointer, 4);
-    user_data[0] = box;
-    user_data[1] = username_entry;
-    user_data[2] = password_entry;
-    user_data[3] = confirm_password_entry;
+    register_data[0] = box;
+    register_data[1] = username_entry;
+    register_data[2] = password_entry;
+    register_data[3] = confirm_password_entry;
 
-    g_signal_connect(submit_btn, "clicked", G_CALLBACK(submit_register), user_data);
-    g_signal_connect(confirm_password_entry, "activate", G_CALLBACK(submit_register), user_data);
+    g_signal_connect(submit_btn, "clicked", G_CALLBACK(submit_register), register_data);
+    g_signal_connect(confirm_password_entry, "activate", G_CALLBACK(submit_register), register_data);
 
     gtk_box_pack_start(GTK_BOX(box), labelUsername, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(box), username_entry, FALSE, FALSE, 0);
