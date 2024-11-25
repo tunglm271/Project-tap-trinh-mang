@@ -199,6 +199,8 @@ void submit_name(GtkButton *button, gpointer user_data) {
     GtkEntry *password_input = (GtkEntry *)data[2];
     const gchar *username = gtk_entry_get_text(name_input);  // Get the text from the entry
     const gchar *password = gtk_entry_get_text(password_input);
+    
+    memset(buffer, 0, BUFFER_SIZE);
     buffer[0] = 0x01;
     sprintf(buffer+1, "username:%s;password:%s", username, password);
     printf("%s",buffer);
@@ -242,19 +244,26 @@ void submit_register(GtkButton *button, gpointer register_data) {
     GtkEntry *username_entry = (GtkEntry *)data[1];
     GtkEntry *password_entry = (GtkEntry *)data[2];
     GtkEntry *confirm_password_entry = (GtkEntry *)data[3];
-
+    
     const gchar *username = gtk_entry_get_text(username_entry);
     const gchar *password = gtk_entry_get_text(password_entry);
     const gchar *confirm_password = gtk_entry_get_text(confirm_password_entry);
-
+    
     if (strcmp(password, confirm_password) != 0) {
         GtkWidget *error_label = gtk_label_new("Passwords do not match!");
         gtk_box_pack_start(GTK_BOX(box), error_label, FALSE, FALSE, 0);
         gtk_widget_show_all(box);
-    } else {
-        // Handle successful registration (e.g., send data to server)
-        g_print("Username: %s\n", username);
-        g_print("Password: %s\n", password);
+    } else { 
+        memset(buffer, 0, BUFFER_SIZE);
+        buffer[0] = 0x04;
+        sprintf(buffer+1, "username:%s;password:%s", username, password);
+        send(sock, buffer, BUFFER_SIZE, 0);
+        
+        memset(buffer, 0, BUFFER_SIZE);
+        recv(sock, buffer, BUFFER_SIZE, 0);
+        if(buffer[0] == 0x05) {
+        printf("dang nhap thanh cong\n");
+        } else printf("dang nhap khong thanh cong\n");
     }
 
     g_free(data);
