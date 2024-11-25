@@ -19,6 +19,10 @@ char buffer[BUFFER_SIZE] = {0};
 
 void render_welcome_page(GtkBox *box, const gchar *username);
 
+void handle_answer_click(GtkButton *button, gpointer data) {
+    printf("%d", data[0]);
+}
+
 gboolean update_countdown(gpointer user_data) {
     CountdownData *data = (CountdownData *)user_data;
     time_t now = time(NULL);
@@ -103,6 +107,23 @@ void render_question(GtkButton *button, gpointer GameData) {
     GtkWidget *btn2 = gtk_button_new_with_label(options[1]);
     GtkWidget *btn3 = gtk_button_new_with_label(options[2]);
     GtkWidget *btn4 = gtk_button_new_with_label(options[3]);
+
+    gpointer *answer_data_0 = g_new(gpointer, 1);
+    answer_data_0[0] = 0;
+    gpointer *answer_data_1 = g_new(gpointer, 1);
+    answer_data_1[0] = 1;
+    gpointer *answer_data_2 = g_new(gpointer, 1);
+    answer_data_2[0] = 2;
+    gpointer *answer_data_3 = g_new(gpointer, 1);
+    answer_data_3[0] = 3;
+
+
+    // Add event answer buttons
+    g_signal_connect(btn1, "clicked", G_CALLBACK(handle_answer_click), answer_data_0);
+    g_signal_connect(btn2, "clicked", G_CALLBACK(handle_answer_click), answer_data_1);
+    g_signal_connect(btn3, "clicked", G_CALLBACK(handle_answer_click), answer_data_2);
+    g_signal_connect(btn4, "clicked", G_CALLBACK(handle_answer_click), answer_data_3);
+
     gtk_widget_set_size_request(btn1, 150, -1);
     gtk_widget_set_size_request(btn2, 150, -1);
     // Add buttons to the grid
