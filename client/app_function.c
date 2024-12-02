@@ -13,8 +13,8 @@
 
 int sock;
 struct sockaddr_in serv_addr;
-
 char buffer[BUFFER_SIZE] = {0};
+int current_point = 14;
 
 
 void render_welcome_page(GtkBox *box, const gchar *username);
@@ -174,6 +174,10 @@ void render_question(GtkButton *button, gpointer GameData) {
         // Add CSS class to specific labels
         if (i == 0 || i == 5 || i == 10) {
             add_css_class_to_widget(money_label, "milestone");
+        }
+
+        if( i == current_point) {
+            gtk_widget_set_name(money_label, "current-point");
         }
 
         // Pack the label into the money section
@@ -402,10 +406,10 @@ void activate(GtkApplication *app, gpointer user_data) {
     gtk_container_add(GTK_CONTAINER(window), box);
     // Show all widgets in the window
     gtk_widget_show_all(window);
+    create_app_socket(&sock, &serv_addr);
 
     char cwd[PATH_MAX];  // Store current working directory
     char sound_path[PATH_MAX * 2];  // To store the full path of the sound file
-    create_app_socket(&sock, &serv_addr);
     if (getcwd(cwd, sizeof(cwd)) != NULL) {
         g_print("Current working directory: %s\n", cwd);
         snprintf(sound_path, sizeof(sound_path), "%s/%s", cwd, "client/assets/intro.ogg");

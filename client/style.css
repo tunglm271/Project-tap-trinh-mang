@@ -97,6 +97,11 @@ button > label {
     border: #C0C0C0 3px solid;
 }
 
+#current-point {
+    background-color: orange;
+}
+
+
 .milestone {
     font-size: large;
     color: yellow;

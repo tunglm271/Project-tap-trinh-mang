@@ -6,6 +6,7 @@
 
 #define PORT 8080
 #define BUFFER_SIZE 1024
+static GstElement *current_pipeline = NULL;
 
 void create_app_socket(int *sock, struct sockaddr_in *serv_addr) {
     if ((*sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -47,7 +48,9 @@ void load_css(GtkWidget *widget) {
 void remove_all_children(GtkContainer *container) {
     GList *children = gtk_container_get_children(container);
     for (GList *iter = children; iter != NULL; iter = iter->next) {
-        gtk_widget_destroy(GTK_WIDGET(iter->data));
+        GtkWidget *child = GTK_WIDGET(iter->data);
+        g_signal_handlers_disconnect_by_data(child, NULL);
+        gtk_widget_destroy(child);
     }
     g_list_free(children);
 }
@@ -75,7 +78,14 @@ void play_sound_effect(const char *file_path) {
     // Initialize GStreamer
     gst_init(NULL, NULL);
 
-    // Create a pipeline to play the sound
+    // Stop and unref the current pipeline if it exists
+    if (current_pipeline) {
+        gst_element_set_state(current_pipeline, GST_STATE_NULL);
+        gst_object_unref(current_pipeline);
+        current_pipeline = NULL;
+    }
+
+    // Create a new pipeline to play the sound
     char pipeline_description[256];
     snprintf(pipeline_description, sizeof(pipeline_description), "playbin uri=file://%s", file_path);
 
@@ -85,6 +95,9 @@ void play_sound_effect(const char *file_path) {
         g_error_free(error);
         return;
     }
+
+    // Set the new pipeline as the current pipeline
+    current_pipeline = pipeline;
 
     // Start playing the audio
     gst_element_set_state(pipeline, GST_STATE_PLAYING);
@@ -97,4 +110,6 @@ void play_sound_effect(const char *file_path) {
     // Clean up the pipeline
     gst_element_set_state(pipeline, GST_STATE_NULL);
     gst_object_unref(pipeline);
+    current_pipeline = NULL;
 }
+
