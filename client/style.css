@@ -110,3 +110,11 @@ button > label {
 #dialog-text {
     color: black;
 }
+
+#give-up-btn {
+    background: red;
+}
+
+#give-up-btn:hover {
+    background-color: orange;
+}
