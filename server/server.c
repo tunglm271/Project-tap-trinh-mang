@@ -51,8 +51,8 @@ int main() {
     struct sockaddr_in address;
     int addrlen = sizeof(address);
     char buffer[MAX] = {0};
+    int previousNumber;
 
-    
     loadQuestions("data/quiz_library_easy.txt", quizArray, &count, level);
 
     
@@ -136,8 +136,9 @@ int main() {
                    strncat(buffer, "\n", MAX - strlen(buffer) - 1);
                 }
                 send(client_sockets[client_count], buffer, MAX, 0);
+                previousNumber = numberQuestion;
            } else if (buffer[0] == 0x08) {
-                 if(atoi(buffer+1) == quizArray[numberQuestion].right_answer - 1) {
+                 if(atoi(buffer+1) == quizArray[previousNumber].right_answer - 1) {
                      memset(buffer, 0, MAX);
                      buffer[0] = 0x09;
                      send(client_sockets[client_count], buffer, MAX, 0);

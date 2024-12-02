@@ -15,11 +15,28 @@ int sock;
 struct sockaddr_in serv_addr;
 char buffer[BUFFER_SIZE] = {0};
 int current_point = 14;
+static guint countdown_timeout_id = 0;
 GtkWidget *window;
 GtkWidget *main_box;
 
 void render_welcome_page(const gchar *username);
 void render_rooms();
+void render_question(GtkButton *button);
+void on_dialog_response(GtkDialog *dialog, gint response_id, gpointer user_data);
+void handle_time_up(GtkDialog *dialog, gint response_id, gpointer user_data);
+void handle_give_up(GtkButton *button);
+
+
+
+void handle_give_up(GtkButton *button) {
+    // xu li khi nguoi choi bo cuoc
+}
+
+
+void handle_time_up(GtkDialog *dialog, gint response_id, gpointer user_data) {
+    gtk_widget_destroy(GTK_WIDGET(dialog));
+    //Xu li het thoi gian o day
+}
 
 gboolean update_countdown(gpointer user_data) {
     CountdownData *data = (CountdownData *)user_data;
@@ -33,6 +50,19 @@ gboolean update_countdown(gpointer user_data) {
         return TRUE; // Continue the timeout
     } else {
         gtk_label_set_text(data->label, "00");
+        GtkWidget *dialog;
+        dialog = gtk_message_dialog_new(GTK_WINDOW(window), 
+                        GTK_DIALOG_DESTROY_WITH_PARENT, 
+                        GTK_MESSAGE_ERROR, 
+                        GTK_BUTTONS_OK, 
+                        NULL);
+        GtkWidget *content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+        GtkWidget *dialog_label = gtk_label_new("Time's up!\nYou won 1000$");
+        gtk_widget_set_name(dialog_label, "dialog-text");
+        gtk_container_add(GTK_CONTAINER(content_area), dialog_label);
+        gtk_widget_show(dialog_label);      
+        g_signal_connect(dialog, "response", G_CALLBACK(handle_time_up), NULL);
+        gtk_dialog_run(GTK_DIALOG(dialog));
         return FALSE; // Stop the timeout
     }
 }
@@ -55,13 +85,26 @@ void handle_answer(GtkButton *button, gpointer answerData) {
     recv(sock, buffer, BUFFER_SIZE, 0);
 
     if (buffer[0] == 0x09) {
-       printf("Correct answer!\n");
-       memset(buffer, 0, BUFFER_SIZE);
-       buffer[0] = 0x07;
-       send(sock, buffer, BUFFER_SIZE, 0);
-       memset(buffer, 0, BUFFER_SIZE);
-       recv(sock, buffer, BUFFER_SIZE, 0);
-       printf("%s\n", buffer);
+       printf("Correct answer!\n No: %d", 15-current_point); 
+       if(current_point == 0) {
+         render_question(NULL);
+         GtkWidget *dialog;
+         dialog = gtk_message_dialog_new(GTK_WINDOW(window), 
+                        GTK_DIALOG_DESTROY_WITH_PARENT, 
+                        GTK_MESSAGE_INFO, 
+                        GTK_BUTTONS_OK, 
+                        NULL);
+        GtkWidget *content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+        GtkWidget *dialog_label = gtk_label_new("Congratulations! \nYou are a millionaire!");
+        gtk_widget_set_name(dialog_label, "dialog-text");
+        gtk_container_add(GTK_CONTAINER(content_area), dialog_label);
+        gtk_widget_show(dialog_label);      
+        g_signal_connect(dialog, "response", G_CALLBACK(on_dialog_response), NULL);
+        gtk_dialog_run(GTK_DIALOG(dialog));
+       } else {
+        render_question(NULL);
+        current_point--;
+       }
     } else {
         GtkWidget *dialog;
         dialog = gtk_message_dialog_new(GTK_WINDOW(window), 
@@ -73,7 +116,6 @@ void handle_answer(GtkButton *button, gpointer answerData) {
         GtkWidget *dialog_label = gtk_label_new("Incorrect answer!\nYou won 1000$");
         gtk_widget_set_name(dialog_label, "dialog-text");
         gtk_container_add(GTK_CONTAINER(content_area), dialog_label);
-        gtk_widget_set_halign(dialog_label, GTK_ALIGN_CENTER);
         gtk_widget_show(dialog_label);      
         g_signal_connect(dialog, "response", G_CALLBACK(on_dialog_response), NULL);
         gtk_dialog_run(GTK_DIALOG(dialog));
@@ -84,22 +126,21 @@ void render_question(GtkButton *button) {
     
     remove_all_children(GTK_CONTAINER(main_box));
 
-    // Change direction of the main box to horizontal
+    if(countdown_timeout_id) {
+        g_source_remove(countdown_timeout_id);
+        countdown_timeout_id = 0;
+    }
+
     gtk_orientable_set_orientation(GTK_ORIENTABLE(main_box), GTK_ORIENTATION_HORIZONTAL);
 
-    // Create two sub-boxes
     GtkWidget *question_section = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_widget_set_name(question_section, "question_section");
     GtkWidget *money_section = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_widget_set_size_request(money_section, 200, -1);
     gtk_widget_set_name(money_section, "money_section");
 
-    // =============================
-    // Add content to the question box
-    // =============================
-    // Create a grid to wrap the label
     GtkWidget *wrapper_grid = gtk_grid_new();
-    gtk_widget_set_size_request(wrapper_grid, 100, -1); // Set the width of the wrapper
+    gtk_widget_set_size_request(wrapper_grid, 100, -1); 
 
     // Create the countdown label
     GtkWidget *countdown_label = gtk_label_new("30");
@@ -115,9 +156,8 @@ void render_question(GtkButton *button) {
     CountdownData *countdown_data = g_malloc(sizeof(CountdownData));
     countdown_data->label = GTK_LABEL(countdown_label);
     countdown_data->end_time = time(NULL) + 30;
-
     // Start the countdown
-    g_timeout_add(1000, (GSourceFunc)update_countdown, countdown_data);
+    countdown_timeout_id = g_timeout_add(1000, (GSourceFunc)update_countdown, countdown_data);
     
     memset(buffer, 0, BUFFER_SIZE);
     buffer[0] = 0x07;
@@ -133,7 +173,7 @@ void render_question(GtkButton *button) {
     }
 
     // Create a new label with a question
-    GtkWidget *question_label = gtk_label_new(question);
+    GtkWidget *question_label = gtk_label_new(question ? question : "No question received");
     gtk_widget_set_name(question_label, "question-label");
 
     // Create a grid for the answer buttons
@@ -151,9 +191,17 @@ void render_question(GtkButton *button) {
         gtk_grid_attach(GTK_GRID(grid), buttons[i], i % 2, i / 2, 1, 1);
     }
 
+    // Create the give up button
+    GtkWidget *give_up_button = gtk_button_new_with_label("Give Up");
+    gtk_widget_set_size_request(give_up_button, 100, -1);
+    gtk_widget_set_name(give_up_button, "give-up-btn");
+    gtk_widget_set_size_request(give_up_button, 150, -1);
+    g_signal_connect(give_up_button, "clicked", G_CALLBACK(handle_give_up), NULL);
+
     // Pack the question label and grid into the question box
     gtk_box_pack_start(GTK_BOX(question_section), question_label, FALSE, FALSE, 10);
     gtk_box_pack_start(GTK_BOX(question_section), grid, FALSE, FALSE, 10);
+    gtk_box_pack_start(GTK_BOX(question_section), give_up_button, FALSE, FALSE, 10);
 
     // =============================
     // Add content to the money list box

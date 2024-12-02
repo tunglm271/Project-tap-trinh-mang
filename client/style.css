@@ -162,3 +162,10 @@ button > label {
     background-color: #45a049; /* Màu xanh lá đậm khi hover */
 }
 
+#give-up-btn {
+    background: red;
+}
+
+#give-up-btn:hover {
+    background-color: orange;
+}
