@@ -54,8 +54,7 @@ int main() {
 
     
     loadQuestions("data/quiz_library_easy.txt", quizArray, &count, level);
-    srand(time(0));
-    int numberQuestion = (rand() % 40) + 1;
+
     
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
     {
@@ -102,6 +101,9 @@ int main() {
         memset(buffer, 0, MAX);
         char username[50], password[50];
         while(recv(client_sockets[client_count], buffer, MAX, 0) > 0) {
+          
+          srand(time(0));
+          int numberQuestion = (rand() % 40) + 1;
           if(buffer[0] == 0x01) {
             sscanf(buffer+1, "username:%[^;];\npassword:%s\n", username, password);
                if(login("data/user.txt", username, password) == 1) {

@@ -48,6 +48,12 @@ void handle_answer(GtkButton *button, gpointer answerData) {
 
     if (buffer[0] == 0x09) {
        printf("Correct answer!\n");
+       memset(buffer, 0, BUFFER_SIZE);
+       buffer[0] = 0x07;
+       send(sock, buffer, BUFFER_SIZE, 0);
+       memset(buffer, 0, BUFFER_SIZE);
+       recv(sock, buffer, BUFFER_SIZE, 0);
+       printf("%s\n", buffer);
     } else {
        printf("Incorrect answer!\n");
     }
