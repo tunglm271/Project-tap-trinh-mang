@@ -55,12 +55,8 @@ void handle_answer(GtkButton *button, gpointer answerData) {
 
     if (buffer[0] == 0x09) {
        printf("Correct answer!\n");
-       memset(buffer, 0, BUFFER_SIZE);
-       buffer[0] = 0x07;
-       send(sock, buffer, BUFFER_SIZE, 0);
-       memset(buffer, 0, BUFFER_SIZE);
-       recv(sock, buffer, BUFFER_SIZE, 0);
-       printf("%s\n", buffer);
+       render_question(NULL);
+       current_point++;
     } else {
         GtkWidget *dialog;
         dialog = gtk_message_dialog_new(GTK_WINDOW(window), 
@@ -115,6 +111,7 @@ void render_question(GtkButton *button) {
     countdown_data->label = GTK_LABEL(countdown_label);
     countdown_data->end_time = time(NULL) + 30;
 
+
     // Start the countdown
     g_timeout_add(1000, (GSourceFunc)update_countdown, countdown_data);
     
@@ -132,7 +129,7 @@ void render_question(GtkButton *button) {
     }
 
     // Create a new label with a question
-    GtkWidget *question_label = gtk_label_new(question);
+    GtkWidget *question_label = gtk_label_new(question ? question : "No question received");
     gtk_widget_set_name(question_label, "question-label");
 
     // Create a grid for the answer buttons
