@@ -19,6 +19,7 @@ GtkWidget *window;
 GtkWidget *main_box;
 
 void render_welcome_page(const gchar *username);
+void render_rooms();
 
 gboolean update_countdown(gpointer user_data) {
     CountdownData *data = (CountdownData *)user_data;
@@ -271,8 +272,8 @@ void render_welcome_page(const gchar *username) {
 
     gtk_box_pack_start(GTK_BOX(main_box), welcome_text, TRUE, TRUE, 10);
     gtk_box_pack_start(GTK_BOX(main_box), start_btn, TRUE, FALSE, 0);
-    g_signal_connect(start_btn, "clicked", G_CALLBACK(render_question), NULL);
-    g_signal_connect(start_btn, "clicked", G_CALLBACK(render_question), NULL);
+    g_signal_connect(start_btn, "clicked", G_CALLBACK(render_rooms), NULL);
+    // g_signal_connect(start_btn, "clicked", G_CALLBACK(render_question), NULL);
     gtk_widget_show_all(GTK_WIDGET(main_box));  
 }
 
@@ -370,6 +371,102 @@ void render_register(GtkButton *button) {
 
     gtk_widget_show_all(main_box);  
 }
+
+void join_room(GtkWidget *widget, gpointer data) {
+    const gchar *room_name = (const gchar *)data;
+    render_question(NULL);
+    g_print("You have joined the room: %s\n", room_name);
+
+}
+
+void create_room(GtkWidget *widget, gpointer data) {
+    // In thông báo khi nút "Create Room" được nhấn
+    printf("Create Room button clicked!\n");
+
+    // Thực hiện các thao tác khác như tạo phòng mới ở đây
+}
+
+
+void render_rooms() {
+    // Tạo mảng phòng giả lập và số lượng người trong mỗi phòng
+    const gchar *rooms[] = {"Room 1", "Room 2", "Room 3", "Room 4", "Room 5", "Room 6", "Room 7", "Room 8"};
+    int num_people[] = {5, 3, 7, 4, 2, 8, 0, 0};  // Số lượng người trong mỗi phòng
+    int num_rooms = sizeof(rooms) / sizeof(rooms[0]);  // Số lượng phòng
+
+    GtkWidget *rooms_list_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
+    GtkWidget *room_box_left, *room_box_right;
+    GtkWidget *room_label;
+    GtkWidget *join_btn;
+    GtkWidget *people_label;
+    GtkWidget *create_room_btn;
+
+    // Xóa tất cả các phần tử con hiện tại trong container chính
+    remove_all_children(GTK_CONTAINER(main_box));
+
+    // Tạo các box con để chia layout thành 2 cột
+    room_box_left = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);  // Cột bên trái
+    room_box_right = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10); // Cột bên phải
+
+    // Duyệt qua mảng các phòng và tạo các phần tử
+    for (int i = 0; i < num_rooms; i++) {
+        GtkWidget *room_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);  // Hộp mỗi phòng
+        gtk_style_context_add_class(gtk_widget_get_style_context(room_box), "room-box");  // Thêm class cho room_box
+
+        const gchar *room_name = rooms[i];
+        int people_count = num_people[i];  // Lấy số người trong phòng
+        
+        // Tạo nhãn tên phòng
+        room_label = gtk_label_new(room_name);
+        gtk_style_context_add_class(gtk_widget_get_style_context(room_label), "room-label");
+
+        // Tạo nhãn hiển thị số lượng người
+        gchar *people_text = g_strdup_printf("People: %d/10", people_count);
+        people_label = gtk_label_new(people_text);
+        g_free(people_text);
+        gtk_style_context_add_class(gtk_widget_get_style_context(people_label), "room-people");
+
+        // Tạo nút tham gia phòng
+        join_btn = gtk_button_new_with_label("Join room");
+        gtk_style_context_add_class(gtk_widget_get_style_context(join_btn), "join-btn");
+        
+        // Gắn tín hiệu khi nhấn nút để tham gia phòng
+        g_signal_connect(join_btn, "clicked", G_CALLBACK(join_room), (gpointer)room_name);
+
+        // Thêm các phần tử vào hộp mỗi phòng
+        gtk_box_pack_start(GTK_BOX(room_box), room_label, TRUE, TRUE, 5);
+        gtk_box_pack_start(GTK_BOX(room_box), people_label, TRUE, TRUE, 5);
+        gtk_box_pack_start(GTK_BOX(room_box), join_btn, TRUE, TRUE, 5);
+
+        // Chia phòng vào 2 cột, bên trái hoặc bên phải
+        if (i % 2 == 0) {
+            gtk_box_pack_start(GTK_BOX(room_box_left), room_box, FALSE, FALSE, 10);  // Cột trái
+        } else {
+            gtk_box_pack_start(GTK_BOX(room_box_right), room_box, FALSE, FALSE, 10); // Cột phải
+        }
+    }
+
+    // Tạo box chứa 2 cột
+    GtkWidget *two_columns_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10); // Chia thành 2 cột
+    gtk_box_pack_start(GTK_BOX(two_columns_box), room_box_left, TRUE, TRUE, 10);
+    gtk_box_pack_start(GTK_BOX(two_columns_box), room_box_right, TRUE, TRUE, 10);
+
+    // Thêm vào main_box
+    gtk_box_pack_start(GTK_BOX(main_box), two_columns_box, TRUE, TRUE, 10);
+
+    // Tạo nút "Create Room" ở dưới danh sách phòng
+    create_room_btn = gtk_button_new_with_label("Create Room");
+    gtk_style_context_add_class(gtk_widget_get_style_context(create_room_btn), "create-room-btn");
+
+    // Gắn tín hiệu khi nhấn nút để tạo phòng mới
+    g_signal_connect(create_room_btn, "clicked", G_CALLBACK(create_room), NULL);
+
+    // Thêm nút vào main_box dưới 2 cột
+    gtk_box_pack_start(GTK_BOX(main_box), create_room_btn, FALSE, FALSE, 10);
+
+    gtk_widget_show_all(GTK_WIDGET(main_box));
+}
+
+
 
 void activate(GtkApplication *app, gpointer user_data) {
     GtkWidget *header_bar;
