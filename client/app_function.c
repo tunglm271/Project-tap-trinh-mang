@@ -15,9 +15,10 @@ int sock;
 struct sockaddr_in serv_addr;
 char buffer[BUFFER_SIZE] = {0};
 int current_point = 14;
+GtkWidget *window;
+GtkWidget *main_box;
 
-
-void render_welcome_page(GtkBox *box, const gchar *username);
+void render_welcome_page(const gchar *username);
 
 gboolean update_countdown(gpointer user_data) {
     CountdownData *data = (CountdownData *)user_data;
@@ -33,6 +34,12 @@ gboolean update_countdown(gpointer user_data) {
         gtk_label_set_text(data->label, "00");
         return FALSE; // Stop the timeout
     }
+}
+
+
+void on_dialog_response(GtkDialog *dialog, gint response_id, gpointer user_data) {
+    g_print("OK button clicked\n");
+    gtk_widget_destroy(GTK_WIDGET(dialog));
 }
 
 void handle_answer(GtkButton *button, gpointer answerData) {
@@ -55,15 +62,25 @@ void handle_answer(GtkButton *button, gpointer answerData) {
        recv(sock, buffer, BUFFER_SIZE, 0);
        printf("%s\n", buffer);
     } else {
-       printf("Incorrect answer!\n");
+        GtkWidget *dialog;
+        dialog = gtk_message_dialog_new(GTK_WINDOW(window), 
+                        GTK_DIALOG_DESTROY_WITH_PARENT, 
+                        GTK_MESSAGE_ERROR, 
+                        GTK_BUTTONS_OK, 
+                        NULL);
+        GtkWidget *content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+        GtkWidget *dialog_label = gtk_label_new("Incorrect answer!\nYou won 1000$");
+        gtk_widget_set_name(dialog_label, "dialog-text");
+        gtk_container_add(GTK_CONTAINER(content_area), dialog_label);
+        gtk_widget_set_halign(dialog_label, GTK_ALIGN_CENTER);
+        gtk_widget_show(dialog_label);      
+        g_signal_connect(dialog, "response", G_CALLBACK(on_dialog_response), NULL);
+        gtk_dialog_run(GTK_DIALOG(dialog));
     }
 }
 
-void render_question(GtkButton *button, gpointer GameData) {
-    gpointer *data = (gpointer *)GameData;
-    GtkWidget *main_box = (GtkWidget *)data[0];
+void render_question(GtkButton *button) {
     
-
     remove_all_children(GTK_CONTAINER(main_box));
 
     // Change direction of the main box to horizontal
@@ -192,7 +209,6 @@ void render_question(GtkButton *button, gpointer GameData) {
     gtk_box_pack_start(GTK_BOX(main_box), money_section, FALSE, FALSE, 0);
     gtk_widget_show_all(main_box);
 
-    g_free(data);
 }
 
 void render_loading(GtkButton *button, gpointer gameData) {
@@ -221,9 +237,8 @@ void render_loading(GtkButton *button, gpointer gameData) {
 void submit_name(GtkButton *button, gpointer user_data) {
     g_print("submit_name\n");
     gpointer *data = (gpointer *)user_data;
-    GtkWidget *box = (GtkWidget *)data[0];
-    GtkEntry *name_input = (GtkEntry *)data[1];
-    GtkEntry *password_input = (GtkEntry *)data[2];
+    GtkEntry *name_input = (GtkEntry *)data[0];
+    GtkEntry *password_input = (GtkEntry *)data[1];
     const gchar *username = gtk_entry_get_text(name_input);
     const gchar *password = gtk_entry_get_text(password_input);
     memset(buffer, 0, BUFFER_SIZE);
@@ -236,31 +251,29 @@ void submit_name(GtkButton *button, gpointer user_data) {
     recv(sock, buffer, BUFFER_SIZE, 0);
     if(buffer[0] == 0x02) {
         printf("dang nhap thanh cong\n");
-        render_welcome_page(GTK_BOX(box), username);
+        render_welcome_page(username);
         g_free(data);
     } else {
-        remove_child_by_name(GTK_CONTAINER(box), "error-label");
+        remove_child_by_name(GTK_CONTAINER(main_box), "error-label");
         GtkWidget *error_label = gtk_label_new("username or password is incorrect!");
         gtk_widget_set_name(error_label, "error-label");
-        gtk_box_pack_start(GTK_BOX(box), error_label, FALSE, FALSE, 0);
-        gtk_widget_show_all(box);
+        gtk_box_pack_start(GTK_BOX(main_box), error_label, FALSE, FALSE, 0);
+        gtk_widget_show_all(main_box);
     }
 }
 
-void render_welcome_page(GtkBox *box, const gchar *username) {
+void render_welcome_page(const gchar *username) {
     GtkWidget *welcome_text = gtk_label_new(NULL); 
     GtkWidget *start_btn = gtk_button_new_with_label("Start game");
     gtk_label_set_text(GTK_LABEL(welcome_text), g_strdup_printf("Welcome %s", username));
     gtk_widget_set_name(welcome_text, "welcome-text");
-    remove_all_children(GTK_CONTAINER(box));
+    remove_all_children(GTK_CONTAINER(main_box));
 
-    gpointer *gameData = g_new(gpointer, 1);
-    gameData[0] = box;
-    gtk_box_pack_start(GTK_BOX(box), welcome_text, TRUE, TRUE, 10);
-    gtk_box_pack_start(GTK_BOX(box), start_btn, TRUE, FALSE, 0);
-    g_signal_connect(start_btn, "clicked", G_CALLBACK(render_question), gameData);
-    g_signal_connect(start_btn, "clicked", G_CALLBACK(render_question), gameData);
-    gtk_widget_show_all(GTK_WIDGET(box));  
+    gtk_box_pack_start(GTK_BOX(main_box), welcome_text, TRUE, TRUE, 10);
+    gtk_box_pack_start(GTK_BOX(main_box), start_btn, TRUE, FALSE, 0);
+    g_signal_connect(start_btn, "clicked", G_CALLBACK(render_question), NULL);
+    g_signal_connect(start_btn, "clicked", G_CALLBACK(render_question), NULL);
+    gtk_widget_show_all(GTK_WIDGET(main_box));  
 }
 
 
@@ -296,10 +309,8 @@ void submit_register(GtkButton *button, gpointer register_data) {
 }
 
 
-void render_login(GtkButton *button, gpointer input_data) {
-    gpointer *data = (gpointer *)input_data;
-    GtkWidget *box = (GtkWidget *)data[0];
-    remove_all_children(GTK_CONTAINER(box));
+void render_login(GtkButton *button) {
+    remove_all_children(GTK_CONTAINER(main_box));
 
     GtkWidget *labelName = gtk_label_new("Enter username:");
     GtkWidget *labelPassword = gtk_label_new("Enter password");
@@ -308,10 +319,9 @@ void render_login(GtkButton *button, gpointer input_data) {
     gtk_entry_set_visibility(GTK_ENTRY(PasswordInput), FALSE);
     GtkWidget *SubmitBtn = gtk_button_new_with_label("Login");
 
-    gpointer *user_data = g_new(gpointer, 3);
-    user_data[0] = box;
-    user_data[1] = NameInput;
-    user_data[2] = PasswordInput;
+    gpointer *user_data = g_new(gpointer, 2);
+    user_data[0] = NameInput;
+    user_data[1] = PasswordInput;
 
 
     // Connect the submit button click event to the on_submit_clicked callback
@@ -319,20 +329,17 @@ void render_login(GtkButton *button, gpointer input_data) {
     g_signal_connect(PasswordInput, "activate", G_CALLBACK(submit_name), user_data);
 
 
-    gtk_box_pack_start(GTK_BOX(box), labelName, FALSE, FALSE, 0);  
-    gtk_box_pack_start(GTK_BOX(box), NameInput, FALSE, FALSE, 0);  
-    gtk_box_pack_start(GTK_BOX(box), labelPassword, FALSE, FALSE, 0);  
-    gtk_box_pack_start(GTK_BOX(box), PasswordInput, FALSE, FALSE, 0);  
-    gtk_box_pack_start(GTK_BOX(box), SubmitBtn, FALSE, FALSE, 0); 
+    gtk_box_pack_start(GTK_BOX(main_box), labelName, FALSE, FALSE, 0);  
+    gtk_box_pack_start(GTK_BOX(main_box), NameInput, FALSE, FALSE, 0);  
+    gtk_box_pack_start(GTK_BOX(main_box), labelPassword, FALSE, FALSE, 0);  
+    gtk_box_pack_start(GTK_BOX(main_box), PasswordInput, FALSE, FALSE, 0);  
+    gtk_box_pack_start(GTK_BOX(main_box), SubmitBtn, FALSE, FALSE, 0); 
     
-    gtk_widget_show_all(box);  
-    g_free(data);
+    gtk_widget_show_all(main_box);  
 }
 
-void render_register(GtkButton *button, gpointer input_data) {
-    gpointer *data = (gpointer *)input_data;
-    GtkWidget *box = (GtkWidget *)data[0];
-    remove_all_children(GTK_CONTAINER(box));
+void render_register(GtkButton *button) {
+    remove_all_children(GTK_CONTAINER(main_box));
 
     GtkWidget *labelUsername = gtk_label_new("Enter username:");
     GtkWidget *labelPassword = gtk_label_new("Enter password:");
@@ -345,7 +352,7 @@ void render_register(GtkButton *button, gpointer input_data) {
     GtkWidget *submit_btn = gtk_button_new_with_label("Register");
 
     gpointer *register_data = g_new(gpointer, 4);
-    register_data[0] = box;
+    register_data[0] = main_box;
     register_data[1] = username_entry;
     register_data[2] = password_entry;
     register_data[3] = confirm_password_entry;
@@ -353,21 +360,18 @@ void render_register(GtkButton *button, gpointer input_data) {
     g_signal_connect(submit_btn, "clicked", G_CALLBACK(submit_register), register_data);
     g_signal_connect(confirm_password_entry, "activate", G_CALLBACK(submit_register), register_data);
 
-    gtk_box_pack_start(GTK_BOX(box), labelUsername, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(box), username_entry, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(box), labelPassword, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(box), password_entry, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(box), labelConfirmPassword, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(box), confirm_password_entry, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(box), submit_btn, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(main_box), labelUsername, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(main_box), username_entry, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(main_box), labelPassword, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(main_box), password_entry, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(main_box), labelConfirmPassword, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(main_box), confirm_password_entry, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(main_box), submit_btn, FALSE, FALSE, 0);
 
-    gtk_widget_show_all(box);  
-    g_free(data);
+    gtk_widget_show_all(main_box);  
 }
 
 void activate(GtkApplication *app, gpointer user_data) {
-    GtkWidget *window;
-    GtkWidget *box;
     GtkWidget *header_bar;
     GtkWidget *title_label;
 
@@ -392,22 +396,19 @@ void activate(GtkApplication *app, gpointer user_data) {
 
 
     // Create a box container (vertical or horizontal)
-    box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
-    gtk_widget_set_name(box, "content");
+    main_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
+    gtk_widget_set_name(main_box, "content");
 
     loginButton = gtk_button_new_with_label("Login");
     signUpButton = gtk_button_new_with_label("Create new account");
-
-    // Create a tuple (array) to store box and entry
-    gpointer *data = g_new(gpointer, 1);
-    data[0] = box;    
+  
     // Connect the submit button click event to the on_submit_clicked callback
-    g_signal_connect(loginButton, "clicked", G_CALLBACK(render_login), data);
-    gtk_box_pack_start(GTK_BOX(box), loginButton, FALSE, FALSE, 0);  // Add the "Enter your name" label
-    gtk_box_pack_start(GTK_BOX(box), signUpButton, FALSE, FALSE, 0);  // Add the text entry field
-    g_signal_connect(signUpButton, "clicked", G_CALLBACK(render_register), data);
+    g_signal_connect(loginButton, "clicked", G_CALLBACK(render_login), NULL);
+    gtk_box_pack_start(GTK_BOX(main_box), loginButton, FALSE, FALSE, 0);  // Add the "Enter your name" label
+    gtk_box_pack_start(GTK_BOX(main_box), signUpButton, FALSE, FALSE, 0);  // Add the text entry field
+    g_signal_connect(signUpButton, "clicked", G_CALLBACK(render_register), NULL);
     // Add the box container to the window
-    gtk_container_add(GTK_CONTAINER(window), box);
+    gtk_container_add(GTK_CONTAINER(window), main_box);
     // Show all widgets in the window
     gtk_widget_show_all(window);
     create_app_socket(&sock, &serv_addr);

@@ -106,3 +106,7 @@ button > label {
     font-size: large;
     color: yellow;
 }
+
+#dialog-text {
+    color: black;
+}
