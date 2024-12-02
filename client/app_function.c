@@ -38,21 +38,25 @@ gboolean update_countdown(gpointer user_data) {
 void handle_answer(GtkButton *button, gpointer answerData) {
     int answer = GPOINTER_TO_INT(answerData);
     printf("Answer chosen: %d\n", answer);
-    // memset(buffer, 0, BUFFER_SIZE);
-    // buffer[0] = 0x08;
-    // buffer[1] = answer_index;
-    // send(sock, buffer, BUFFER_SIZE, 0);
+    memset(buffer, 0, BUFFER_SIZE);
+    buffer[0] = 0x08;
+    sprintf(buffer + 1, "%d", answer);
+    send(sock, buffer, BUFFER_SIZE, 0);
 
-    // memset(buffer, 0, BUFFER_SIZE);
-    // recv(sock, buffer, BUFFER_SIZE, 0);
+    memset(buffer, 0, BUFFER_SIZE);
+    recv(sock, buffer, BUFFER_SIZE, 0);
 
-    // if (buffer[0] == 0x09) {
-    //     // Correct answer
-    //     g_print("Correct answer!\n");
-    // } else {
-    //     // Incorrect answer
-    //     g_print("Incorrect answer!\n");
-    // }
+    if (buffer[0] == 0x09) {
+       printf("Correct answer!\n");
+       memset(buffer, 0, BUFFER_SIZE);
+       buffer[0] = 0x07;
+       send(sock, buffer, BUFFER_SIZE, 0);
+       memset(buffer, 0, BUFFER_SIZE);
+       recv(sock, buffer, BUFFER_SIZE, 0);
+       printf("%s\n", buffer);
+    } else {
+       printf("Incorrect answer!\n");
+    }
 }
 
 void render_question(GtkButton *button, gpointer GameData) {
