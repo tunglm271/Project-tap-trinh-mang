@@ -15,10 +15,12 @@ int sock;
 struct sockaddr_in serv_addr;
 char buffer[BUFFER_SIZE] = {0};
 int current_point = 14;
+static guint countdown_timeout_id = 0;
 GtkWidget *window;
 GtkWidget *main_box;
 
 void render_welcome_page(const gchar *username);
+void render_question(GtkButton *button);
 
 gboolean update_countdown(gpointer user_data) {
     CountdownData *data = (CountdownData *)user_data;
@@ -56,7 +58,7 @@ void handle_answer(GtkButton *button, gpointer answerData) {
     if (buffer[0] == 0x09) {
        printf("Correct answer!\n");
        render_question(NULL);
-       current_point++;
+       current_point--;
     } else {
         GtkWidget *dialog;
         dialog = gtk_message_dialog_new(GTK_WINDOW(window), 
@@ -78,6 +80,11 @@ void handle_answer(GtkButton *button, gpointer answerData) {
 void render_question(GtkButton *button) {
     
     remove_all_children(GTK_CONTAINER(main_box));
+
+    if(countdown_timeout_id) {
+        g_source_remove(countdown_timeout_id);
+        countdown_timeout_id = 0;
+    }
 
     // Change direction of the main box to horizontal
     gtk_orientable_set_orientation(GTK_ORIENTABLE(main_box), GTK_ORIENTATION_HORIZONTAL);
@@ -110,10 +117,8 @@ void render_question(GtkButton *button) {
     CountdownData *countdown_data = g_malloc(sizeof(CountdownData));
     countdown_data->label = GTK_LABEL(countdown_label);
     countdown_data->end_time = time(NULL) + 30;
-
-
     // Start the countdown
-    g_timeout_add(1000, (GSourceFunc)update_countdown, countdown_data);
+    countdown_timeout_id = g_timeout_add(1000, (GSourceFunc)update_countdown, countdown_data);
     
     memset(buffer, 0, BUFFER_SIZE);
     buffer[0] = 0x07;
