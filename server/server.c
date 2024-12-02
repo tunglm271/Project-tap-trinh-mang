@@ -134,7 +134,18 @@ int main() {
                    strncat(buffer, "\n", MAX - strlen(buffer) - 1);
                 }
                 send(client_sockets[client_count], buffer, MAX, 0);
-           } 
+           } else if (buffer[0] == 0x08) {
+                 if(atoi(buffer+1) == quizArray[numberQuestion].right_answer - 1) {
+                     memset(buffer, 0, MAX);
+                     buffer[0] = 0x09;
+                     send(client_sockets[client_count], buffer, MAX, 0);
+                 }
+                 else { 
+                   memset(buffer, 0, MAX);
+                   buffer[0] = 0x10;
+                   send(client_sockets[client_count], buffer, MAX, 0);
+                 }
+           }
         }
         
         client_count++;
@@ -142,7 +153,6 @@ int main() {
     }
     
    
-    
     close(server_fd);
     return 0;
 }
