@@ -427,12 +427,55 @@ void join_room(GtkWidget *widget, gpointer data) {
 
 }
 
-void create_room(GtkWidget *widget, gpointer data) {
-    // In thông báo khi nút "Create Room" được nhấn
-    printf("Create Room button clicked!\n");
+void create_room(GtkWidget *widget, gpointer window) {
+    GtkWidget *dialog, *content_area, *entry, *create_button, *cancel_button;
+    GtkWidget *box;
 
-    // Thực hiện các thao tác khác như tạo phòng mới ở đây
+    // Tạo hộp thoại popup
+    dialog = gtk_dialog_new_with_buttons("Create New Room", GTK_WINDOW(window), 
+                                        GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+                                        "_Cancel", GTK_RESPONSE_CANCEL,
+                                        "_Create", GTK_RESPONSE_ACCEPT,
+                                        NULL);
+
+    // Thay đổi kích thước hộp thoại
+    gtk_window_set_default_size(GTK_WINDOW(dialog), 400, 100);  // Kích thước 400x200 px
+
+    // Lấy vùng nội dung của hộp thoại
+    content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+    
+    // Tạo hộp chứa phần tử
+    box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
+    gtk_container_add(GTK_CONTAINER(content_area), box);
+    
+    // Tạo ô nhập liệu cho tên phòng
+    entry = gtk_entry_new();
+    gtk_entry_set_placeholder_text(GTK_ENTRY(entry), "Enter room name");
+
+    // Thêm ô nhập liệu vào hộp thoại
+    gtk_box_pack_start(GTK_BOX(box), entry, FALSE, FALSE, 5);
+
+    // Hiển thị hộp thoại và chờ người dùng nhập liệu
+    gtk_widget_show_all(dialog);
+
+    // Xử lý sự kiện khi người dùng nhấn "Create" hoặc "Cancel"
+    gint response = gtk_dialog_run(GTK_DIALOG(dialog));
+
+    if (response == GTK_RESPONSE_ACCEPT) {
+        // Lấy tên phòng từ ô nhập liệu
+        const gchar *room_name = gtk_entry_get_text(GTK_ENTRY(entry));
+        printf("Room created: %s\n", room_name);  // In ra tên phòng đã tạo
+
+        // Thực hiện tạo phòng mới tại đây (cập nhật danh sách phòng, cơ sở dữ liệu, v.v.)
+
+    } else {
+        printf("Room creation cancelled.\n");  // In ra nếu người dùng hủy
+    }
+
+    // Đóng hộp thoại
+    gtk_widget_destroy(dialog);
 }
+
 
 
 void render_rooms() {
