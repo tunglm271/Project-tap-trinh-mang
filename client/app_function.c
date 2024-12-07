@@ -77,10 +77,12 @@ gboolean update_countdown(gpointer user_data) {
 void on_dialog_response(GtkDialog *dialog, gint response_id, gpointer user_data) {
     g_print("OK button clicked\n");
     gtk_widget_destroy(GTK_WIDGET(dialog));
+    render_rooms();
 }
 
 void handle_answer(GtkButton *button, gpointer answerData) {
-    int answer = GPOINTER_TO_INT(answerData);
+    gpointer *data = (gpointer *)answerData;
+    int answer = GPOINTER_TO_INT(data[0]);
     printf("Answer chosen: %d\n", answer);
     memset(buffer, 0, BUFFER_SIZE);
     buffer[0] = 0x08;
@@ -136,6 +138,7 @@ void handle_answer(GtkButton *button, gpointer answerData) {
 void handle_50_50(GtkWidget *widget, gpointer data) {
     GtkWidget **buttons = (GtkWidget **)data;
     //xu li ghi nguoi choi an 50_50
+    g_print("50_50\n");
 }
 
 void render_question(GtkButton *button, bool firstQuestion) {
@@ -203,7 +206,10 @@ void render_question(GtkButton *button, bool firstQuestion) {
     for (int i = 0; i < 4; i++) {
         buttons[i] = gtk_button_new_with_label(options[i]);
         gtk_widget_set_size_request(buttons[i], 150, -1);
-        g_signal_connect(buttons[i], "clicked", G_CALLBACK(handle_answer), GINT_TO_POINTER(i));
+        gpointer *answer_data = g_new(gpointer, 2);
+        answer_data[0] = GINT_TO_POINTER(i);
+        answer_data[1] = GINT_TO_POINTER(firstQuestion);
+        g_signal_connect(buttons[i], "clicked", G_CALLBACK(handle_answer), answer_data);
         gtk_grid_attach(GTK_GRID(grid), buttons[i], i % 2, i / 2, 1, 1);
     }
 
@@ -264,7 +270,7 @@ void render_question(GtkButton *button, bool firstQuestion) {
             add_css_class_to_widget(money_label, "milestone");
         }
 
-        if( i == current_point && firstQuestion == TRUE) {
+        if( i == current_point && firstQuestion == FALSE) {
             gtk_widget_set_name(money_label, "current-point");
         }
 
@@ -341,6 +347,7 @@ void render_welcome_page(const gchar *username) {
     gtk_box_pack_start(GTK_BOX(main_box), welcome_text, TRUE, TRUE, 10);
     gtk_box_pack_start(GTK_BOX(main_box), start_btn, TRUE, FALSE, 0);
     g_signal_connect(start_btn, "clicked", G_CALLBACK(convert_render_question), NULL);
+    // g_signal_connect(start_btn, "clicked", G_CALLBACK(render_rooms), NULL);
     gtk_widget_show_all(GTK_WIDGET(main_box));  
 }
 
