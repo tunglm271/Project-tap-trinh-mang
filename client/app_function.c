@@ -30,6 +30,7 @@ const char *money_labels[] = {
 
 void render_welcome_page(const gchar *username);
 void render_rooms();
+void render_summary_page(GtkWidget *widget, gpointer window);
 void render_question(GtkButton *button, bool firstQuestion);
 void on_dialog_response(GtkDialog *dialog, gint response_id, gpointer user_data);
 void handle_time_up(GtkDialog *dialog, gint response_id, gpointer user_data);
@@ -363,7 +364,7 @@ void submit_name(GtkButton *button, gpointer user_data) {
 }
 
 void render_welcome_page(const gchar *username) {
-    GtkWidget *welcome_text = gtk_label_new(NULL); 
+    GtkWidget *welcome_text = gtk_label_new(NULL);
     GtkWidget *start_btn = gtk_button_new_with_label("Start game");
     gtk_label_set_text(GTK_LABEL(welcome_text), g_strdup_printf("Welcome %s", username));
     gtk_widget_set_name(welcome_text, "welcome-text");
@@ -371,8 +372,9 @@ void render_welcome_page(const gchar *username) {
 
     gtk_box_pack_start(GTK_BOX(main_box), welcome_text, TRUE, TRUE, 10);
     gtk_box_pack_start(GTK_BOX(main_box), start_btn, TRUE, FALSE, 0);
-    g_signal_connect(start_btn, "clicked", G_CALLBACK(convert_render_question), NULL);
-    // g_signal_connect(start_btn, "clicked", G_CALLBACK(render_rooms), NULL);
+    // g_signal_connect(start_btn, "clicked", G_CALLBACK(convert_render_question), NULL);
+    g_signal_connect(start_btn, "clicked", G_CALLBACK(render_rooms), NULL);
+    // g_signal_connect(start_btn, "clicked", G_CALLBACK(render_summary_page), NULL);
     gtk_widget_show_all(GTK_WIDGET(main_box));  
 }
 
@@ -618,6 +620,49 @@ void render_rooms() {
     gtk_widget_show_all(GTK_WIDGET(main_box));
 }
 
+void render_summary_page(GtkWidget *widget, gpointer window) {
+    GtkWidget *summary_box, *amount_label, *home_button;
+
+    // Tạo container chính cho màn hình tổng kết
+    summary_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
+    gtk_container_set_border_width(GTK_CONTAINER(summary_box), 20);
+
+    // Tạo label hiển thị số tiền nhận được
+    amount_label = gtk_label_new("Congratulations! You earned $1000!");
+    gtk_widget_set_name(amount_label, "amount-label"); // Gán tên để định kiểu bằng CSS
+
+    // Áp dụng CSS cho label
+    GtkCssProvider *css_provider = gtk_css_provider_new();
+    const gchar *css_data =
+        "#amount-label {"
+        "    background-color: yellow;"
+        "    color: black;"
+        "    padding: 10px;"
+        "    border-radius: 5px;"
+        "    font-size: 18px;"
+        "}";
+    gtk_css_provider_load_from_data(css_provider, css_data, -1, NULL);
+
+    GtkStyleContext *context = gtk_widget_get_style_context(amount_label);
+    gtk_style_context_add_provider(context, GTK_STYLE_PROVIDER(css_provider), GTK_STYLE_PROVIDER_PRIORITY_USER);
+
+    // Tạo nút "Quay lại trang chủ"
+    home_button = gtk_button_new_with_label("Home");
+    g_signal_connect(home_button, "clicked", G_CALLBACK(render_rooms), window); // Chuyển về trang chủ
+
+    // Thêm các widget vào hộp chính
+    gtk_box_pack_start(GTK_BOX(summary_box), amount_label, FALSE, FALSE, 10);
+    gtk_box_pack_start(GTK_BOX(summary_box), home_button, FALSE, FALSE, 10);
+
+    // Xóa các phần tử cũ khỏi cửa sổ chính (main_box)
+    remove_all_children(GTK_CONTAINER(main_box));
+
+    // Thêm hộp tổng kết vào cửa sổ chính
+    gtk_box_pack_start(GTK_BOX(main_box), summary_box, TRUE, TRUE, 0);
+
+    // Hiển thị mọi thứ
+    gtk_widget_show_all(main_box);
+}
 
 
 void activate(GtkApplication *app, gpointer user_data) {
