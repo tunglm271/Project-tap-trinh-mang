@@ -30,7 +30,7 @@ const char *money_labels[] = {
 
 void render_welcome_page(const gchar *username);
 void render_rooms();
-void render_summary_page(GtkWidget *widget, gpointer window);
+void render_summary_page();
 void render_question(GtkButton *button, bool firstQuestion);
 void on_dialog_response(GtkDialog *dialog, gint response_id, gpointer user_data);
 void handle_time_up(GtkDialog *dialog, gint response_id, gpointer user_data);
@@ -87,7 +87,9 @@ void on_endgame_dialog_response(GtkDialog *dialog, gint response_id, gpointer da
     g_print("You won %s", money_labels[current_point]);
     gtk_widget_destroy(GTK_WIDGET(dialog));
     //render man hinh tong ket, lay so tien thang duoc bang money_labels[current_point]
+    render_summary_page();
     //Chuyen current_point ve 14
+    current_point = 14;
 }
 
 
@@ -535,6 +537,7 @@ void render_rooms() {
 
 
     // Tạo mảng phòng giả lập và số lượng người trong mỗi phòng
+    int roomId[] = {1, 2, 3, 4, 5, 6, 7, 8};
     const gchar *rooms[] = {"Room 1", "Room 2", "Room 3", "Room 4", "Room 5", "Room 6", "Room 7", "Room 8"};
     int num_people[] = {5, 3, 7, 4, 2, 8, 0, 0};  // Số lượng người trong mỗi phòng
     int num_rooms = sizeof(rooms) / sizeof(rooms[0]);  // Số lượng phòng
@@ -612,7 +615,11 @@ void render_rooms() {
     gtk_widget_show_all(GTK_WIDGET(main_box));
 }
 
-void render_summary_page(GtkWidget *widget, gpointer window) {
+void render_summary_page() {
+    if(countdown_timeout_id) {
+        g_source_remove(countdown_timeout_id);
+        countdown_timeout_id = 0;
+    }
     GtkWidget *summary_box, *amount_label, *home_button;
 
     // Tạo container chính cho màn hình tổng kết
