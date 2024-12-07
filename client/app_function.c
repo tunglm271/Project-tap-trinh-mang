@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <arpa/inet.h>
+#include <stdbool.h>
 
 #define PORT 8080
 #define BUFFER_SIZE 1024
@@ -20,10 +21,11 @@ GtkWidget *window;
 GtkWidget *main_box;
 
 void render_welcome_page(const gchar *username);
-void render_question(GtkButton *button);
+void render_question(GtkButton *button, bool firstQuestion);
 void on_dialog_response(GtkDialog *dialog, gint response_id, gpointer user_data);
 void handle_time_up(GtkDialog *dialog, gint response_id, gpointer user_data);
 void handle_give_up(GtkButton *button);
+void handle_50_50(GtkWidget *widget, gpointer data)
 
 
 
@@ -37,6 +39,11 @@ void handle_give_up(GtkButton *button) {
 void handle_time_up(GtkDialog *dialog, gint response_id, gpointer user_data) {
     gtk_widget_destroy(GTK_WIDGET(dialog));
     //Xu li het thoi gian o day
+}
+
+void convert_render_question(GtkButton *button, gpointer data) {
+    bool firstQuestion = GPOINTER_TO_INT(data);
+    render_question(button, FALSE);
 }
 
 gboolean update_countdown(gpointer user_data) {
@@ -86,9 +93,11 @@ void handle_answer(GtkButton *button, gpointer answerData) {
     recv(sock, buffer, BUFFER_SIZE, 0);
 
     if (buffer[0] == 0x09) {
-       printf("Correct answer!\n No: %d", 15-current_point); 
+       printf("Correct answer!\n");
+        char cwd[PATH_MAX];  
+        char sound_path[PATH_MAX * 2]; 
        if(current_point == 0) {
-         render_question(NULL);
+         render_question(NULL, TRUE);
          GtkWidget *dialog;
          dialog = gtk_message_dialog_new(GTK_WINDOW(window), 
                         GTK_DIALOG_DESTROY_WITH_PARENT, 
@@ -103,7 +112,9 @@ void handle_answer(GtkButton *button, gpointer answerData) {
         g_signal_connect(dialog, "response", G_CALLBACK(on_dialog_response), NULL);
         gtk_dialog_run(GTK_DIALOG(dialog));
        } else {
-        render_question(NULL);
+        render_question(NULL, TRUE);
+        gtk_widget_set_name(GTK_WIDGET(button), "right-answer");
+        g_usleep(1000000);
         current_point--;
        }
     } else {
@@ -123,7 +134,13 @@ void handle_answer(GtkButton *button, gpointer answerData) {
     }
 }
 
-void render_question(GtkButton *button) {
+
+void handle_50_50(GtkWidget *widget, gpointer data) {
+    GtkWidget **buttons = (GtkWidget **)data;
+    //xu li ghi nguoi choi an 50_50
+}
+
+void render_question(GtkButton *button, bool firstQuestion) {
     
     remove_all_children(GTK_CONTAINER(main_box));
 
@@ -224,6 +241,8 @@ void render_question(GtkButton *button) {
     gtk_widget_set_name(askPeople,"askPeople");
     add_css_class_to_widget(help_50,"helpOption");
 
+    g_signal_connect(help_50, "clicked", G_CALLBACK(handle_50_50), buttons);
+
     gtk_grid_attach(GTK_GRID(helpButton), help_50, 0, 0, 1, 1);
     gtk_grid_attach(GTK_GRID(helpButton), callFriend, 1, 0, 1, 1);
     gtk_grid_attach(GTK_GRID(helpButton), askPeople, 2, 0, 1, 1);
@@ -247,7 +266,7 @@ void render_question(GtkButton *button) {
             add_css_class_to_widget(money_label, "milestone");
         }
 
-        if( i == current_point) {
+        if( i == current_point && firstQuestion == TRUE) {
             gtk_widget_set_name(money_label, "current-point");
         }
 
@@ -321,8 +340,9 @@ void render_welcome_page(const gchar *username) {
 
     gtk_box_pack_start(GTK_BOX(main_box), welcome_text, TRUE, TRUE, 10);
     gtk_box_pack_start(GTK_BOX(main_box), start_btn, TRUE, FALSE, 0);
-    g_signal_connect(start_btn, "clicked", G_CALLBACK(render_question), NULL);
-    g_signal_connect(start_btn, "clicked", G_CALLBACK(render_question), NULL);
+    gpointer *game_data = g_new(gpointer, 1);
+    game_data[0] = FALSE;
+    g_signal_connect(start_btn, "clicked", G_CALLBACK(convert_render_question), game_data);
     gtk_widget_show_all(GTK_WIDGET(main_box));  
 }
 
@@ -469,7 +489,5 @@ void activate(GtkApplication *app, gpointer user_data) {
         g_print("Current working directory: %s\n", cwd);
         snprintf(sound_path, sizeof(sound_path), "%s/%s", cwd, "client/assets/intro.ogg");
         play_sound_effect(sound_path);
-    } else {
-        perror("getcwd() error");
     }
 }

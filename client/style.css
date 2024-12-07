@@ -118,3 +118,7 @@ button > label {
 #give-up-btn:hover {
     background-color: orange;
 }
+
+#right-answer {
+    background-color: green;
+}
