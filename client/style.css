@@ -173,3 +173,8 @@ button > label {
 #right-answer {
     background-color: green;
 }
+
+#hot-seat-label {
+    font-weight: 700;
+    font-size: large;
+}
