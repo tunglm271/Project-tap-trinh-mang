@@ -74,10 +74,17 @@ gboolean update_countdown(gpointer user_data) {
 }
 
 
-void on_endgame_dialog_response(GtkDialog *dialog, gint response_id, gpointer user_data) {
+void on_endgame_dialog_response(GtkDialog *dialog, gint response_id, gpointer endgame_data) {
+    gpointer *data = (gpointer *)endgame_data;
+    bool isWin = GPOINTER_TO_INT(data[0]);
+    if (isWin) {
+        g_print("You won the game!\n");
+    } else {
+        g_print("You lost the game!\n");
+    }
     g_print("OK button clicked\n");
     gtk_widget_destroy(GTK_WIDGET(dialog));
-    //render man hinh tong ket
+    //render man hinh tong ket, lay isWin de biet nguoi choi thang hay thua
 }
 
 
@@ -118,8 +125,10 @@ void handle_answer(GtkButton *button, gpointer answerData) {
         GtkWidget *dialog_label = gtk_label_new("Congratulations! \nYou are a millionaire!");
         gtk_widget_set_name(dialog_label, "dialog-text");
         gtk_container_add(GTK_CONTAINER(content_area), dialog_label);
-        gtk_widget_show(dialog_label);      
-        g_signal_connect(dialog, "response", G_CALLBACK(on_endgame_dialog_response), NULL);
+        gtk_widget_show(dialog_label);
+        gpointer *endgame_data = g_new(gpointer, 1);
+        endgame_data[0] = GINT_TO_POINTER(TRUE);
+        g_signal_connect(dialog, "response", G_CALLBACK(on_endgame_dialog_response), endgame_data);
         gtk_dialog_run(GTK_DIALOG(dialog));
        } else {
         render_question(NULL, FALSE);
@@ -141,7 +150,9 @@ void handle_answer(GtkButton *button, gpointer answerData) {
             g_signal_connect(dialog, "response", G_CALLBACK(on_eliminate_dialog_response), NULL);
         } else {
             dialog_label = gtk_label_new("Incorrect answer!");
-            g_signal_connect(dialog, "response", G_CALLBACK(on_endgame_dialog_response), NULL);
+            gpointer *endgame_data = g_new(gpointer, 1);
+            endgame_data[0] = GINT_TO_POINTER(FALSE);
+            g_signal_connect(dialog, "response", G_CALLBACK(on_endgame_dialog_response), endgame_data);
         }
         gtk_widget_set_name(dialog_label, "dialog-text");
         gtk_container_add(GTK_CONTAINER(content_area), dialog_label);
