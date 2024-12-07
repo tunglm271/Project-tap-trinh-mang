@@ -20,6 +20,14 @@ static guint countdown_timeout_id = 0;
 GtkWidget *window;
 GtkWidget *main_box;
 
+const char *money_labels[] = {
+    "15. 150.000.000", "14. 85.000.000", "13. 60.000.000", 
+    "12. 40.000.000", "11. 30.000.000", "10. 22.000.000", 
+    "9. 14.000.000", "8. 10.000.000", "7. 6.000.000", 
+    "6. 3.000.000", "5. 2.000.000", "4. 1.000.000", 
+    "3. 600.000", "2. 400.000", "1. 200.000"
+};
+
 void render_welcome_page(const gchar *username);
 void render_rooms();
 void render_question(GtkButton *button, bool firstQuestion);
@@ -27,8 +35,8 @@ void on_dialog_response(GtkDialog *dialog, gint response_id, gpointer user_data)
 void handle_time_up(GtkDialog *dialog, gint response_id, gpointer user_data);
 void handle_give_up(GtkButton *button);
 void handle_50_50(GtkWidget *widget, gpointer data);
-
-
+void on_endgame_dialog_response(GtkDialog *dialog, gint response_id, gpointer endgame_data);
+void on_eliminate_dialog_response(GtkDialog *dialog, gint response_id, gpointer user_data);
 
 void handle_give_up(GtkButton *button) {
     // xu li khi nguoi choi bo cuoc
@@ -74,17 +82,11 @@ gboolean update_countdown(gpointer user_data) {
 }
 
 
-void on_endgame_dialog_response(GtkDialog *dialog, gint response_id, gpointer endgame_data) {
-    gpointer *data = (gpointer *)endgame_data;
-    bool isWin = GPOINTER_TO_INT(data[0]);
-    if (isWin) {
-        g_print("You won the game!\n");
-    } else {
-        g_print("You lost the game!\n");
-    }
-    g_print("OK button clicked\n");
+void on_endgame_dialog_response(GtkDialog *dialog, gint response_id, gpointer data) {
+    g_print("You won %s", money_labels[current_point]);
     gtk_widget_destroy(GTK_WIDGET(dialog));
-    //render man hinh tong ket, lay isWin de biet nguoi choi thang hay thua
+    //render man hinh tong ket, lay so tien thang duoc bang money_labels[current_point]
+    //Chuyen current_point ve 14
 }
 
 
@@ -126,9 +128,7 @@ void handle_answer(GtkButton *button, gpointer answerData) {
         gtk_widget_set_name(dialog_label, "dialog-text");
         gtk_container_add(GTK_CONTAINER(content_area), dialog_label);
         gtk_widget_show(dialog_label);
-        gpointer *endgame_data = g_new(gpointer, 1);
-        endgame_data[0] = GINT_TO_POINTER(TRUE);
-        g_signal_connect(dialog, "response", G_CALLBACK(on_endgame_dialog_response), endgame_data);
+        g_signal_connect(dialog, "response", G_CALLBACK(on_endgame_dialog_response), NULL);
         gtk_dialog_run(GTK_DIALOG(dialog));
        } else {
         render_question(NULL, FALSE);
@@ -150,9 +150,7 @@ void handle_answer(GtkButton *button, gpointer answerData) {
             g_signal_connect(dialog, "response", G_CALLBACK(on_eliminate_dialog_response), NULL);
         } else {
             dialog_label = gtk_label_new("Incorrect answer!");
-            gpointer *endgame_data = g_new(gpointer, 1);
-            endgame_data[0] = GINT_TO_POINTER(FALSE);
-            g_signal_connect(dialog, "response", G_CALLBACK(on_endgame_dialog_response), endgame_data);
+            g_signal_connect(dialog, "response", G_CALLBACK(on_endgame_dialog_response), NULL);
         }
         gtk_widget_set_name(dialog_label, "dialog-text");
         gtk_container_add(GTK_CONTAINER(content_area), dialog_label);
@@ -279,15 +277,6 @@ void render_question(GtkButton *button, bool firstQuestion) {
     gtk_grid_attach(GTK_GRID(helpButton), callFriend, 1, 0, 1, 1);
     gtk_grid_attach(GTK_GRID(helpButton), askPeople, 2, 0, 1, 1);
     gtk_box_pack_start(GTK_BOX(money_section), helpButton, FALSE, FALSE, 5);
-
-
-    const char *money_labels[] = {
-        "15. 150.000.000", "14. 85.000.000", "13. 60.000.000", 
-        "12. 40.000.000", "11. 30.000.000", "10. 22.000.000", 
-        "9. 14.000.000", "8. 10.000.000", "7. 6.000.000", 
-        "6. 3.000.000", "5. 2.000.000", "4. 1.000.000", 
-        "3. 600.000", "2. 400.000", "1. 200.000"
-    };
 
     // Create and pack the labels into the box
     for (int i = 0; i < 15; i++) {
