@@ -303,27 +303,35 @@ void render_question(GtkButton *button, bool firstQuestion) {
 
 }
 
-void render_loading(GtkButton *button, gpointer gameData) {
-    gpointer *data = (gpointer *)gameData;
-    GtkWidget *box = (GtkWidget *)data[0];
+void render_loading(GtkButton *button) {
     GtkWidget *spinner;
     GtkWidget *label;
 
-    remove_all_children(GTK_CONTAINER(box));
+    remove_all_children(GTK_CONTAINER(main_box));
     label = gtk_label_new("Waiting for other players...");
-    gtk_box_pack_start(GTK_BOX(box), label, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(main_box), label, TRUE, TRUE, 0);
+
+    GtkWidget *go_back_button = gtk_button_new_with_label("GO BACK");
+    GtkWidget *grid = gtk_grid_new();
+    gtk_grid_set_row_spacing(GTK_GRID(grid), 10);
+    gtk_grid_set_column_spacing(GTK_GRID(grid), 10);
+    gtk_grid_attach(GTK_GRID(grid), go_back_button, 0, 0, 1, 1);
+    gtk_widget_set_halign(grid, GTK_ALIGN_CENTER);
+    gtk_box_pack_start(GTK_BOX(main_box), grid, FALSE, FALSE, 0);
+    gtk_widget_set_name(go_back_button, "go-back-btn");
+    
+    g_signal_connect(go_back_button, "clicked", G_CALLBACK(render_rooms), NULL);
     
     // Create a spinner
     spinner = gtk_spinner_new();
     gtk_widget_set_name(spinner, "spinner");
-    gtk_box_pack_start(GTK_BOX(box), spinner, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(main_box), spinner, TRUE, TRUE, 0);
 
     // Start the spinner
     gtk_spinner_start(GTK_SPINNER(spinner));
 
     // Show all widgets in the window
-    gtk_widget_show_all(box);
-    g_free(data);
+    gtk_widget_show_all(main_box);
 }
 
 void submit_name(GtkButton *button, gpointer user_data) {

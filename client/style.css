@@ -178,3 +178,7 @@ button > label {
     font-weight: 700;
     font-size: large;
 }
+
+#go-back-btn {
+    background-color: red;
+}
