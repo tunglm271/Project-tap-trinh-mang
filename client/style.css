@@ -111,6 +111,57 @@ button > label {
     color: black;
 }
 
+/* Định dạng tên phòng */
+.room-label {
+    font-weight: bold;
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+/* Định dạng số lượng người trong phòng */
+.room-people {
+    font-size: 14px;
+    color: #888;
+}
+
+/* Định dạng nút tham gia */
+.join-btn {
+    background-color: #4CAF50; /* Màu xanh lá */
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.join-btn:hover {
+    background-color: #45a049; /* Màu xanh lá đậm khi hover */
+}
+
+/* Định dạng hộp chứa các phần tử phòng */
+.room-box {
+    border: 2px solid #d8e4fa;
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: #d7efff;
+    border-radius: 5px;
+}
+
+/* Định dạng nút "Create Room" */
+.create-room-btn {
+    background-color: #4CAF50; /* Màu xanh lá */
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.create-room-btn:hover {
+    background-color: #45a049; /* Màu xanh lá đậm khi hover */
+}
+
 #give-up-btn {
     background: red;
 }
