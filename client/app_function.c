@@ -165,8 +165,14 @@ void handle_answer(GtkButton *button, gpointer answerData) {
 
 void handle_50_50(GtkWidget *widget, gpointer data) {
     GtkWidget **buttons = (GtkWidget **)data;
-    //xu li ghi nguoi choi an 50_50
-    g_print("50_50\n");
+    
+    memset(buffer, 0, BUFFER_SIZE);
+    buffer[0] = 0x11;
+    send(sock, buffer, BUFFER_SIZE, 0);
+    
+    memset(buffer, 0, BUFFER_SIZE);
+    recv(sock, buffer, BUFFER_SIZE, 0);
+    if(buffer[0] == 0x12) printf("%s\n", buffer+1);
 }
 
 void render_question(GtkButton *button, bool firstQuestion) {
