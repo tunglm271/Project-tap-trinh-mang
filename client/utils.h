@@ -3,6 +3,16 @@
 
 #include <gtk/gtk.h>
 #include <arpa/inet.h>
+#include <stdbool.h>
+
+typedef struct {
+    int current_point;
+    bool is_first_question;
+    bool is_hot_seat;
+    bool is_50_50_used;
+    bool is_call_friend_used;
+    bool is_ask_people_used;
+} GameData;
 
 void create_app_socket(int *sock, struct sockaddr_in *serv_addr);
 void load_css(GtkWidget *widget);

@@ -15,44 +15,40 @@
 int sock;
 struct sockaddr_in serv_addr;
 char buffer[BUFFER_SIZE] = {0};
-int current_point = 14;
 static guint countdown_timeout_id = 0;
 GtkWidget *window;
 GtkWidget *main_box;
 
-typedef struct {
-    int current_point;
-    bool is_first_question;
-    bool is_hot_seat;
-    bool is_50_50_used;
-    bool is_call_friend_used;
-    bool is_ask_people_used;
-} GameData;
 
 GameData user_game_data;
 
-user_game_data.current_point = 14;
-user_game_data.is_first_question = TRUE;
-user_game_data.is_hot_seat = FALSE;
-user_game_data.is_50_50_used = FALSE;
-user_game_data.is_call_friend_used = FALSE;
 
 const char *money_labels[] = {
-    "15. 150.000.000", "14. 85.000.000", "13. 60.000.000", 
-    "12. 40.000.000", "11. 30.000.000", "10. 22.000.000", 
-    "9. 14.000.000", "8. 10.000.000", "7. 6.000.000", 
-    "6. 3.000.000", "5. 2.000.000", "4. 1.000.000", 
-    "3. 600.000", "2. 400.000", "1. 200.000"
+    "150.000.000", "85.000.000", "60.000.000", 
+    "40.000.000", "30.000.000", "22.000.000", 
+    "14.000.000", "10.000.000", "6.000.000", 
+    "3.000.000", "2.000.000", "1.000.000", 
+    "600.000", "400.000", "200.000"
 };
+
+void restart_game_data() {
+    user_game_data.current_point = 14;
+    user_game_data.is_first_question = TRUE;
+    user_game_data.is_hot_seat = FALSE;
+    user_game_data.is_50_50_used = FALSE;
+    user_game_data.is_call_friend_used = FALSE;
+    user_game_data.is_ask_people_used = FALSE;
+}
 
 void render_welcome_page(const gchar *username);
 void render_rooms();
-void render_summary_page();
-void render_question(GtkButton *button, bool firstQuestion);
+void render_summary_page(bool isGiveUp);
+void render_question(GtkButton *button);
 void on_dialog_response(GtkDialog *dialog, gint response_id, gpointer user_data);
 void handle_time_up(GtkDialog *dialog, gint response_id, gpointer user_data);
 void handle_give_up(GtkButton *button);
 void handle_50_50(GtkWidget *widget, gpointer data);
+void handle_call_friend(GtkWidget *widget);
 void on_endgame_dialog_response(GtkDialog *dialog, gint response_id, gpointer endgame_data);
 void on_eliminate_dialog_response(GtkDialog *dialog, gint response_id, gpointer user_data);
 
@@ -64,10 +60,6 @@ void handle_give_up(GtkButton *button) {
 void handle_time_up(GtkDialog *dialog, gint response_id, gpointer user_data) {
     gtk_widget_destroy(GTK_WIDGET(dialog));
     //Xu li het thoi gian o day
-}
-
-void convert_render_question(GtkButton *button) {
-    render_question(button, TRUE);
 }
 
 gboolean update_countdown(gpointer user_data) {
@@ -101,12 +93,10 @@ gboolean update_countdown(gpointer user_data) {
 
 
 void on_endgame_dialog_response(GtkDialog *dialog, gint response_id, gpointer data) {
-    g_print("You won %s", money_labels[current_point]);
+    g_print("You won %s", money_labels[user_game_data.current_point]);
     gtk_widget_destroy(GTK_WIDGET(dialog));
-    //render man hinh tong ket, lay so tien thang duoc bang money_labels[current_point]
-    render_summary_page();
-    //Chuyen current_point ve 14
-    current_point = 14;
+    render_summary_page(FALSE);
+    user_game_data.current_point = 14;
 }
 
 
@@ -117,6 +107,89 @@ void on_eliminate_dialog_response(GtkDialog *dialog, gint response_id, gpointer 
 }
 
 
+void handle_call_friend(GtkWidget *widget) {
+    gtk_widget_hide(widget);
+    user_game_data.is_call_friend_used = TRUE;
+    memset(buffer, 0, BUFFER_SIZE);
+    buffer[0] = 0x11;
+    send(sock, buffer, BUFFER_SIZE, 0);
+    
+    memset(buffer, 0, BUFFER_SIZE);
+    recv(sock, buffer, BUFFER_SIZE, 0);
+    if(buffer[0] == 0x12) printf("%s\n", buffer+1);
+    char correct_answer = buffer[1] - '0' + 'A';
+    
+    GtkWidget *dialog;
+    dialog = gtk_message_dialog_new(GTK_WINDOW(window), 
+                    GTK_DIALOG_DESTROY_WITH_PARENT, 
+                    GTK_MESSAGE_INFO, 
+                    GTK_BUTTONS_OK, 
+                    NULL);
+    GtkWidget *content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));\
+    gchar *dialog_text = g_strdup_printf("I think the answer is %c", correct_answer);
+    GtkWidget *dialog_label = gtk_label_new(dialog_text);
+    gtk_widget_set_name(dialog_label, "dialog-text");
+    gtk_container_add(GTK_CONTAINER(content_area), dialog_label);
+    gtk_widget_show(dialog_label);
+    g_signal_connect(dialog, "response", G_CALLBACK(gtk_widget_destroy), NULL);
+    gtk_dialog_run(GTK_DIALOG(dialog));
+}
+
+
+void handle_ask_people_in_studio(GtkWidget *widget) {
+    gtk_widget_hide(widget);
+    user_game_data.is_ask_people_used = TRUE;
+
+    memset(buffer, 0, BUFFER_SIZE);
+    buffer[0] = 0x11;
+    send(sock, buffer, BUFFER_SIZE, 0);
+    
+    memset(buffer, 0, BUFFER_SIZE);
+    recv(sock, buffer, BUFFER_SIZE, 0);
+    if(buffer[0] == 0x12) printf("%s\n", buffer+1);
+    int correct_answer = buffer[1] - '0';
+
+    int votes[4] = {0, 0, 0, 0};
+    int remaining_votes = 100;
+    votes[correct_answer] = rand() % (remaining_votes - 3 * 10) + 40; 
+    remaining_votes -= votes[correct_answer];
+
+    for (int i = 0; i < 4; i++) {
+        if (i != correct_answer) {
+            votes[i] = rand() % (remaining_votes - (2 - i) * 10) + 10; 
+            remaining_votes -= votes[i];
+        }
+    }
+    votes[3] += remaining_votes;
+    GtkWidget *dialog;
+    dialog = gtk_message_dialog_new(GTK_WINDOW(window), 
+                    GTK_DIALOG_DESTROY_WITH_PARENT, 
+                    GTK_MESSAGE_INFO, 
+                    GTK_BUTTONS_OK, 
+                    NULL);
+    GtkWidget *content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+    gtk_container_set_border_width(GTK_CONTAINER(content_area), 10);
+    GtkWidget *grid = gtk_grid_new();
+    gtk_grid_set_row_spacing(GTK_GRID(grid), 10);
+    gtk_grid_set_column_spacing(GTK_GRID(grid), 10);
+
+    for (int i = 0; i < 4; i++) {
+        gchar *label_text = g_strdup_printf("Option %c: %d%%", 'A' + i, votes[i]);
+        GtkWidget *label = gtk_label_new(label_text);
+        add_css_class_to_widget(label, "dialog-label");
+        GtkWidget *progress_bar = gtk_progress_bar_new();
+        gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(progress_bar), votes[i] / 100.0);
+        gtk_grid_attach(GTK_GRID(grid), label, 0, i, 1, 1);
+        gtk_grid_attach(GTK_GRID(grid), progress_bar, 1, i, 1, 1);
+        g_free(label_text);
+    }
+
+    gtk_container_add(GTK_CONTAINER(content_area), grid);
+    gtk_widget_show_all(dialog);
+    g_signal_connect(dialog, "response", G_CALLBACK(gtk_widget_destroy), NULL);
+    gtk_dialog_run(GTK_DIALOG(dialog));
+}
+
 void handle_answer(GtkButton *button, gpointer answerData) {
 
     if(countdown_timeout_id) {
@@ -126,7 +199,6 @@ void handle_answer(GtkButton *button, gpointer answerData) {
 
     gpointer *data = (gpointer *)answerData;
     int answer = GPOINTER_TO_INT(data[0]);
-    bool isFirstQuestion = GPOINTER_TO_INT(data[1]);
     printf("Answer chosen: %d\n", answer);
     memset(buffer, 0, BUFFER_SIZE);
     buffer[0] = 0x08;
@@ -137,12 +209,11 @@ void handle_answer(GtkButton *button, gpointer answerData) {
     recv(sock, buffer, BUFFER_SIZE, 0);
 
     if (buffer[0] == 0x09) {
-        char cwd[PATH_MAX];  
-        char sound_path[PATH_MAX * 2]; 
-       if(current_point == 0) {
-         render_question(NULL, FALSE);
-         GtkWidget *dialog;
-         dialog = gtk_message_dialog_new(GTK_WINDOW(window), 
+        user_game_data.is_first_question = FALSE;
+        if(user_game_data.current_point == 0) {
+        render_question(NULL);
+        GtkWidget *dialog;
+        dialog = gtk_message_dialog_new(GTK_WINDOW(window), 
                         GTK_DIALOG_DESTROY_WITH_PARENT, 
                         GTK_MESSAGE_INFO, 
                         GTK_BUTTONS_OK, 
@@ -155,10 +226,10 @@ void handle_answer(GtkButton *button, gpointer answerData) {
         g_signal_connect(dialog, "response", G_CALLBACK(on_endgame_dialog_response), NULL);
         gtk_dialog_run(GTK_DIALOG(dialog));
        } else {
-        render_question(NULL, FALSE);
+        render_question(NULL);
         gtk_widget_set_name(GTK_WIDGET(button), "right-answer");
         g_usleep(200000);
-        current_point--;
+        user_game_data.current_point--;
        }
     } else {
         GtkWidget *dialog;
@@ -169,7 +240,7 @@ void handle_answer(GtkButton *button, gpointer answerData) {
                         NULL);
         GtkWidget *content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
         GtkWidget *dialog_label;
-        if(isFirstQuestion) {
+        if(user_game_data.is_first_question == TRUE) {
             dialog_label = gtk_label_new("Incorrect answer!\nYou're out of the game!");
             g_signal_connect(dialog, "response", G_CALLBACK(on_eliminate_dialog_response), NULL);
         } else {
@@ -185,8 +256,18 @@ void handle_answer(GtkButton *button, gpointer answerData) {
 
 
 void handle_50_50(GtkWidget *widget, gpointer data) {
+    
+    user_game_data.is_50_50_used = TRUE;
+    gtk_widget_hide(widget);
+
     GtkWidget **buttons = (GtkWidget **)data;
     
+    const gchar *button_texts[4];
+    for (int i = 0; i < 4; i++) {
+        button_texts[i] = gtk_button_get_label(GTK_BUTTON(buttons[i]));
+        printf("Button %d text: %s\n", i, button_texts[i]);
+    }
+
     memset(buffer, 0, BUFFER_SIZE);
     buffer[0] = 0x11;
     send(sock, buffer, BUFFER_SIZE, 0);
@@ -194,9 +275,23 @@ void handle_50_50(GtkWidget *widget, gpointer data) {
     memset(buffer, 0, BUFFER_SIZE);
     recv(sock, buffer, BUFFER_SIZE, 0);
     if(buffer[0] == 0x12) printf("%s\n", buffer+1);
+    int correct_answer = buffer[1] - '0';
+    printf("Correct answer: %d\n", correct_answer);
+    int eliminated = 0;
+    int eliminated_indices[2] = {-1, -1};
+    srand(time(NULL));
+    while (eliminated < 2) {
+        int rand_index = rand() % 4;
+        if (rand_index != correct_answer && rand_index != eliminated_indices[0] && rand_index != eliminated_indices[1]) {
+            gtk_button_set_label(GTK_BUTTON(buttons[rand_index]), "");
+            gtk_widget_set_sensitive(buttons[rand_index], FALSE);
+            eliminated_indices[eliminated] = rand_index;
+            eliminated++;
+        }
+    }
 }
 
-void render_question(GtkButton *button, bool firstQuestion) {
+void render_question(GtkButton *button) {
     
     remove_all_children(GTK_CONTAINER(main_box));
 
@@ -262,9 +357,8 @@ void render_question(GtkButton *button, bool firstQuestion) {
     for (int i = 0; i < 4; i++) {
         buttons[i] = gtk_button_new_with_label(options[i]);
         gtk_widget_set_size_request(buttons[i], 150, -1);
-        gpointer *answer_data = g_new(gpointer, 2);
+        gpointer *answer_data = g_new(gpointer, 1);
         answer_data[0] = GINT_TO_POINTER(i);
-        answer_data[1] = GINT_TO_POINTER(firstQuestion);
         g_signal_connect(buttons[i], "clicked", G_CALLBACK(handle_answer), answer_data);
         gtk_grid_attach(GTK_GRID(grid), buttons[i], i % 2, i / 2, 1, 1);
     }
@@ -301,10 +395,21 @@ void render_question(GtkButton *button, bool firstQuestion) {
     gtk_widget_set_name(askPeople,"askPeople");
     add_css_class_to_widget(help_50,"helpOption");
 
-    g_signal_connect(help_50, "clicked", G_CALLBACK(handle_50_50), buttons);
+    gpointer *button_data = g_new(gpointer, 4);
+    for (int i = 0; i < 4; i++) {
+        button_data[i] = buttons[i];
+    }
+    g_signal_connect(help_50, "clicked", G_CALLBACK(handle_50_50), button_data);
+    g_signal_connect(callFriend, "clicked", G_CALLBACK(handle_call_friend), NULL);
+    g_signal_connect(askPeople, "clicked", G_CALLBACK(handle_ask_people_in_studio), NULL);
 
-    gtk_grid_attach(GTK_GRID(helpButton), help_50, 0, 0, 1, 1);
-    gtk_grid_attach(GTK_GRID(helpButton), callFriend, 1, 0, 1, 1);
+    if(user_game_data.is_50_50_used == FALSE) {
+        gtk_grid_attach(GTK_GRID(helpButton), help_50, 0, 0, 1, 1);
+    }
+
+    if(user_game_data.is_call_friend_used == FALSE) {
+        gtk_grid_attach(GTK_GRID(helpButton), callFriend, 1, 0, 1, 1);
+    }
     gtk_grid_attach(GTK_GRID(helpButton), askPeople, 2, 0, 1, 1);
     gtk_box_pack_start(GTK_BOX(money_section), helpButton, FALSE, FALSE, 5);
 
@@ -317,7 +422,7 @@ void render_question(GtkButton *button, bool firstQuestion) {
             add_css_class_to_widget(money_label, "milestone");
         }
 
-        if( i == current_point && firstQuestion == FALSE) {
+        if( i == user_game_data.current_point && user_game_data.is_first_question == FALSE) {
             gtk_widget_set_name(money_label, "current-point");
         }
 
@@ -326,7 +431,7 @@ void render_question(GtkButton *button, bool firstQuestion) {
     }
 
     gtk_box_pack_start(GTK_BOX(main_box), question_section, TRUE, TRUE, 10);
-    if(firstQuestion == FALSE) {
+    if(user_game_data.is_first_question == FALSE) {
         gtk_box_pack_start(GTK_BOX(main_box), money_section, FALSE, FALSE, 0);
     }
     gtk_widget_show_all(main_box);
@@ -504,7 +609,7 @@ void render_register(GtkButton *button) {
 
 void join_room(GtkWidget *widget, gpointer data) {
     const gchar *room_name = (const gchar *)data;
-    render_question(NULL, TRUE);
+    render_question(NULL);
     g_print("You have joined the room: %s\n", room_name);
 
 }
@@ -569,6 +674,8 @@ void render_rooms() {
     }
 
     gtk_orientable_set_orientation(GTK_ORIENTABLE(main_box), GTK_ORIENTATION_VERTICAL);
+
+    restart_game_data();
 
 
     // Tạo mảng phòng giả lập và số lượng người trong mỗi phòng
@@ -650,7 +757,7 @@ void render_rooms() {
     gtk_widget_show_all(GTK_WIDGET(main_box));
 }
 
-void render_summary_page() {
+void render_summary_page(bool isGiveUp) {
     if(countdown_timeout_id) {
         g_source_remove(countdown_timeout_id);
         countdown_timeout_id = 0;
@@ -661,8 +768,19 @@ void render_summary_page() {
     summary_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
     gtk_container_set_border_width(GTK_CONTAINER(summary_box), 20);
 
-    // Tạo label hiển thị số tiền nhận được
-    amount_label = gtk_label_new("Congratulations! You earned $1000!");
+    gchar *amount_text;
+    if(isGiveUp) {
+        amount_text = g_strdup_printf("Congratulations! You earned %s!", money_labels[user_game_data.current_point + 1]);
+    } else {
+        int mark = ((15 - user_game_data.current_point) / 5 ) * 5;
+        g_print("mark: %d\n", mark);
+        if(mark == 0) {
+            amount_text = g_strdup_printf("Sorry you lost! You earned 0$");
+        } else {
+            amount_text = g_strdup_printf("Congratulations! You earned %s!", money_labels[15 - mark]);
+        }
+    }
+    amount_label = gtk_label_new(amount_text);
     gtk_widget_set_name(amount_label, "amount-label"); // Gán tên để định kiểu bằng CSS
 
     // Áp dụng CSS cho label
