@@ -20,6 +20,23 @@ static guint countdown_timeout_id = 0;
 GtkWidget *window;
 GtkWidget *main_box;
 
+typedef struct {
+    int current_point;
+    bool is_first_question;
+    bool is_hot_seat;
+    bool is_50_50_used;
+    bool is_call_friend_used;
+    bool is_ask_people_used;
+} GameData;
+
+GameData user_game_data;
+
+user_game_data.current_point = 14;
+user_game_data.is_first_question = TRUE;
+user_game_data.is_hot_seat = FALSE;
+user_game_data.is_50_50_used = FALSE;
+user_game_data.is_call_friend_used = FALSE;
+
 const char *money_labels[] = {
     "15. 150.000.000", "14. 85.000.000", "13. 60.000.000", 
     "12. 40.000.000", "11. 30.000.000", "10. 22.000.000", 
@@ -98,9 +115,13 @@ void on_eliminate_dialog_response(GtkDialog *dialog, gint response_id, gpointer 
 }
 
 
-
-
 void handle_answer(GtkButton *button, gpointer answerData) {
+
+    if(countdown_timeout_id) {
+        g_source_remove(countdown_timeout_id);
+        countdown_timeout_id = 0;
+    }
+
     gpointer *data = (gpointer *)answerData;
     int answer = GPOINTER_TO_INT(data[0]);
     bool isFirstQuestion = GPOINTER_TO_INT(data[1]);
@@ -164,7 +185,7 @@ void handle_answer(GtkButton *button, gpointer answerData) {
 void handle_50_50(GtkWidget *widget, gpointer data) {
     GtkWidget **buttons = (GtkWidget **)data;
     //xu li ghi nguoi choi an 50_50
-    g_print("50_50\n");
+    g_print("50_50\n"); 
 }
 
 void render_question(GtkButton *button, bool firstQuestion) {
