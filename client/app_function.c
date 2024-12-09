@@ -28,11 +28,11 @@ const char *money_labels[] = {
     "40.000.000", "30.000.000", "22.000.000", 
     "14.000.000", "10.000.000", "6.000.000", 
     "3.000.000", "2.000.000", "1.000.000", 
-    "600.000", "400.000", "200.000"
+    "600.000", "400.000", "200.000", "0"
 };
 
 void restart_game_data() {
-    user_game_data.current_point = 14;
+    user_game_data.current_point = 15;
     user_game_data.is_first_question = TRUE;
     user_game_data.is_hot_seat = FALSE;
     user_game_data.is_50_50_used = FALSE;
@@ -54,12 +54,14 @@ void on_eliminate_dialog_response(GtkDialog *dialog, gint response_id, gpointer 
 
 void handle_give_up(GtkButton *button) {
     // xu li khi nguoi choi bo cuoc
+    render_summary_page(TRUE);
 }
 
 
 void handle_time_up(GtkDialog *dialog, gint response_id, gpointer user_data) {
     gtk_widget_destroy(GTK_WIDGET(dialog));
     //Xu li het thoi gian o day
+    render_summary_page(FALSE);
 }
 
 gboolean update_countdown(gpointer user_data) {
@@ -81,12 +83,21 @@ gboolean update_countdown(gpointer user_data) {
                         GTK_BUTTONS_OK, 
                         NULL);
         GtkWidget *content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
-        GtkWidget *dialog_label = gtk_label_new("Time's up!\nYou won 1000$");
+        gchar *label_text = g_strdup_printf("Time's up!\nYou won %s$", money_labels[user_game_data.current_point+1]);
+        if(user_game_data.is_first_question) {
+            label_text = g_strdup_printf("Time's up!\nYou lost!");
+        }
+        
+        GtkWidget *dialog_label = gtk_label_new(label_text);
+        g_free(label_text);
         gtk_widget_set_name(dialog_label, "dialog-text");
         gtk_container_add(GTK_CONTAINER(content_area), dialog_label);
         gtk_widget_show(dialog_label);      
         g_signal_connect(dialog, "response", G_CALLBACK(handle_time_up), NULL);
         gtk_dialog_run(GTK_DIALOG(dialog));
+        if(user_game_data.is_first_question) {
+            render_rooms();
+        }
         return FALSE; // Stop the timeout
     }
 }
@@ -363,17 +374,18 @@ void render_question(GtkButton *button) {
         gtk_grid_attach(GTK_GRID(grid), buttons[i], i % 2, i / 2, 1, 1);
     }
 
-    // Create the give up button
-    GtkWidget *give_up_button = gtk_button_new_with_label("Give Up");
-    gtk_widget_set_size_request(give_up_button, 100, -1);
-    gtk_widget_set_name(give_up_button, "give-up-btn");
-    gtk_widget_set_size_request(give_up_button, 150, -1);
-    g_signal_connect(give_up_button, "clicked", G_CALLBACK(handle_give_up), NULL);
-
     // Pack the question label and grid into the question box
     gtk_box_pack_start(GTK_BOX(question_section), question_label, FALSE, FALSE, 10);
     gtk_box_pack_start(GTK_BOX(question_section), grid, FALSE, FALSE, 10);
-    gtk_box_pack_start(GTK_BOX(question_section), give_up_button, FALSE, FALSE, 10);
+    // Create the give up button
+    if (user_game_data.is_first_question == FALSE) {
+        GtkWidget *give_up_button = gtk_button_new_with_label("Give Up");
+        gtk_widget_set_size_request(give_up_button, 100, -1);
+        gtk_widget_set_name(give_up_button, "give-up-btn");
+        gtk_widget_set_size_request(give_up_button, 150, -1);
+        g_signal_connect(give_up_button, "clicked", G_CALLBACK(handle_give_up), NULL);
+        gtk_box_pack_start(GTK_BOX(question_section), give_up_button, FALSE, FALSE, 10);
+    }
 
     // =============================
     // Add content to the money list box
@@ -422,7 +434,7 @@ void render_question(GtkButton *button) {
             add_css_class_to_widget(money_label, "milestone");
         }
 
-        if( i == user_game_data.current_point && user_game_data.is_first_question == FALSE) {
+        if( i == (user_game_data.current_point -1) && user_game_data.is_first_question == FALSE) {
             gtk_widget_set_name(money_label, "current-point");
         }
 
