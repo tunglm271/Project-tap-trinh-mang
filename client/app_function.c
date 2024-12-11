@@ -20,6 +20,8 @@ static guint countdown_timeout_id = 0;
 GtkWidget *window;
 GtkWidget *main_box;
 Room rooms[MAX_ROOMS];
+char user_name[BUFFER_SIZE];
+int client_id;
 
 GameData user_game_data;
 
@@ -498,6 +500,9 @@ void submit_name(GtkButton *button, gpointer user_data) {
     recv(sock, buffer, BUFFER_SIZE, 0);
     if(buffer[0] == 0x02) {
         printf("dang nhap thanh cong\n");
+        sscanf(buffer + 1, "%[^;];%d", user_name, &client_id);
+        printf("%s\n", user_name);
+        printf("%d\n", client_id);
         render_welcome_page(username);
         g_free(data);
     } else {
