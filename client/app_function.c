@@ -8,6 +8,7 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <stdbool.h>
+#include "../server/data/rooms.h"
 
 #define PORT 8080
 #define BUFFER_SIZE 1024
@@ -18,10 +19,9 @@ char buffer[BUFFER_SIZE] = {0};
 static guint countdown_timeout_id = 0;
 GtkWidget *window;
 GtkWidget *main_box;
-
+Room rooms[MAX_ROOMS];
 
 GameData user_game_data;
-
 
 const char *money_labels[] = {
     "150.000.000", "85.000.000", "60.000.000", 
@@ -664,11 +664,19 @@ void create_room(GtkWidget *widget, gpointer window) {
         // Lấy tên phòng từ ô nhập liệu
         const gchar *room_name = gtk_entry_get_text(GTK_ENTRY(entry));
         printf("Room created: %s\n", room_name);  // In ra tên phòng đã tạo
-
-        // Thực hiện tạo phòng mới tại đây (cập nhật danh sách phòng, cơ sở dữ liệu, v.v.)
-
+        memset(buffer, 0, BUFFER_SIZE);
+        buffer[0] = 0x13;
+        sprintf(buffer+1, "%s\n", room_name);
+        send(sock, buffer, BUFFER_SIZE, 0);
+        
     } else {
         printf("Room creation cancelled.\n");  // In ra nếu người dùng hủy
+    }
+    
+    memset(buffer, 0, BUFFER_SIZE);
+    recv(sock, buffer, BUFFER_SIZE, 0);
+    if(buffer[0] == 0x14) {
+       memcpy(rooms, buffer + 1, sizeof(rooms));
     }
 
     // Đóng hộp thoại

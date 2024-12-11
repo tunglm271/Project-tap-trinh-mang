@@ -10,6 +10,7 @@
 #include <stdbool.h>
 
 #include "data/data.h"
+#include "data/rooms.h"
 
 #define PORT 8080
 #define MAX_CLIENTS 20
@@ -264,6 +265,14 @@ int main() {
                    snprintf(buffer+1, MAX, "%d\n", quizArrayHard[previousNumber].right_answer - 1);
                    send(client_sockets[client_count], buffer, MAX, 0);
               }
+           } else if (buffer[0] == 0x13) {
+                   char room_name[MAX-1];
+                   sscanf(buffer + 1, "%[^\n]", room_name);
+                   add_room(room_name, username);
+                   memset(buffer, 0, MAX);
+                   buffer[0] = 0x14;
+                   memcpy(buffer + 1, rooms, sizeof(rooms));
+                   send(client_sockets[client_count], buffer, MAX, 0);
            }
         }
         

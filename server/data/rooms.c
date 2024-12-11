@@ -1,5 +1,8 @@
 #include "rooms.h"
 
+#include <stdio.h>
+#include <string.h>
+
 Room rooms[MAX_ROOMS];
 int num_rooms = 0;
 
@@ -79,6 +82,20 @@ void remove_user_from_room(int room_id, const char *username) {
         }
     }
 
+}
+
+void print_rooms() {
+    for (int i = 0; i < num_rooms; i++) {
+        printf("Room ID: %d\n", rooms[i].id);
+        printf("Room Name: %s\n", rooms[i].name);
+        printf("Creator: %s\n", rooms[i].creator);
+        printf("Number of Users: %d\n", rooms[i].num_users);
+        printf("Users: ");
+        for (int j = 0; j < rooms[i].num_users; j++) {
+            printf("%s ", rooms[i].users[j]);
+        }
+        printf("\n\n");
+    }
 }
 
 void remove_room(int room_id) {
