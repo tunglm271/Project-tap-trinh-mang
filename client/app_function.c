@@ -11,7 +11,7 @@
 #include "../server/data/rooms.h"
 
 #define PORT 8080
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 8192
 
 int sock;
 struct sockaddr_in serv_addr;
@@ -681,7 +681,7 @@ void create_room(GtkWidget *widget, gpointer window) {
     memset(buffer, 0, BUFFER_SIZE);
     recv(sock, buffer, BUFFER_SIZE, 0);
     if(buffer[0] == 0x14) {
-       memcpy(rooms, buffer + 1, sizeof(rooms));
+       memcpy(rooms, buffer + 1, BUFFER_SIZE);
     }
 
     // Đóng hộp thoại

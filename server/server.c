@@ -14,7 +14,7 @@
 
 #define PORT 8080
 #define MAX_CLIENTS 20
-#define MAX 1024
+#define MAX 8192
 
 #define MAX_QUESTIONS 100
 
