@@ -8,11 +8,16 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <stdbool.h>
+#include <uuid/uuid.h>
 #include "../server/data/rooms.h"
+#include <ctype.h>
+
+#define APP_ID_PREFIX "com.example."
 
 #define PORT 8080
-#define BUFFER_SIZE 8192
+#define BUFFER_SIZE 1024
 
+int loading = 0;
 int sock;
 struct sockaddr_in serv_addr;
 char buffer[BUFFER_SIZE] = {0};
@@ -20,8 +25,6 @@ static guint countdown_timeout_id = 0;
 GtkWidget *window;
 GtkWidget *main_box;
 Room rooms[MAX_ROOMS];
-char user_name[BUFFER_SIZE];
-int client_id;
 
 GameData user_game_data;
 
@@ -456,6 +459,8 @@ void render_loading(GtkButton *button) {
     GtkWidget *spinner;
     GtkWidget *label;
 
+    loading = 1;
+
     remove_all_children(GTK_CONTAINER(main_box));
     label = gtk_label_new("Waiting for other players...");
     gtk_box_pack_start(GTK_BOX(main_box), label, TRUE, TRUE, 0);
@@ -481,6 +486,8 @@ void render_loading(GtkButton *button) {
 
     // Show all widgets in the window
     gtk_widget_show_all(main_box);
+    
+
 }
 
 void submit_name(GtkButton *button, gpointer user_data) {
@@ -500,9 +507,6 @@ void submit_name(GtkButton *button, gpointer user_data) {
     recv(sock, buffer, BUFFER_SIZE, 0);
     if(buffer[0] == 0x02) {
         printf("dang nhap thanh cong\n");
-        sscanf(buffer + 1, "%[^;];%d", user_name, &client_id);
-        printf("%s\n", user_name);
-        printf("%d\n", client_id);
         render_welcome_page(username);
         g_free(data);
     } else {
@@ -678,15 +682,10 @@ void create_room(GtkWidget *widget, gpointer window) {
         printf("Room creation cancelled.\n");  // In ra nếu người dùng hủy
     }
     
-    int received_number_rooms;
-    
     memset(buffer, 0, BUFFER_SIZE);
     recv(sock, buffer, BUFFER_SIZE, 0);
     if(buffer[0] == 0x14) {
-       memcpy(&received_number_rooms, buffer + 1, sizeof(int));
-       memcpy(rooms, buffer + 1 + sizeof(int), sizeof(rooms));
-       printf("%d\n", received_number_rooms); 
-       render_rooms();
+       memcpy(rooms, buffer + 1, sizeof(rooms));
     }
 
     // Đóng hộp thoại
@@ -703,9 +702,19 @@ void render_rooms() {
         countdown_timeout_id = 0;
     }
 
+
+    loading = 0;
+
     gtk_orientable_set_orientation(GTK_ORIENTABLE(main_box), GTK_ORIENTATION_VERTICAL);
 
     restart_game_data();
+
+
+    // Tạo mảng phòng giả lập và số lượng người trong mỗi phòng
+    int roomId[] = {1, 2, 3, 4, 5, 6, 7, 8};
+    const gchar *rooms[] = {"Room 1", "Room 2", "Room 3", "Room 4", "Room 5", "Room 6", "Room 7", "Room 8"};
+    int num_people[] = {5, 3, 7, 4, 2, 8, 0, 0};  // Số lượng người trong mỗi phòng
+    int num_rooms = sizeof(rooms) / sizeof(rooms[0]);  // Số lượng phòng
 
     GtkWidget *rooms_list_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
     GtkWidget *room_box_left, *room_box_right;
@@ -722,12 +731,12 @@ void render_rooms() {
     room_box_right = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10); // Cột bên phải
 
     // Duyệt qua mảng các phòng và tạo các phần tử
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < num_rooms; i++) {
         GtkWidget *room_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);  // Hộp mỗi phòng
         gtk_style_context_add_class(gtk_widget_get_style_context(room_box), "room-box");  // Thêm class cho room_box
 
-        const gchar *room_name = rooms[i].name;
-        int people_count = rooms[i].num_users ? rooms[i].num_users : 0;  // Lấy số người trong phòng
+        const gchar *room_name = rooms[i];
+        int people_count = num_people[i];  // Lấy số người trong phòng
         
         // Tạo nhãn tên phòng
         room_label = gtk_label_new(room_name);
@@ -875,7 +884,7 @@ void activate(GtkApplication *app, gpointer user_data) {
     g_signal_connect(loginButton, "clicked", G_CALLBACK(render_login), NULL);
     gtk_box_pack_start(GTK_BOX(main_box), loginButton, FALSE, FALSE, 0);  // Add the "Enter your name" label
     gtk_box_pack_start(GTK_BOX(main_box), signUpButton, FALSE, FALSE, 0);  // Add the text entry field
-    g_signal_connect(signUpButton, "clicked", G_CALLBACK(render_register), NULL);
+    g_signal_connect(signUpButton, "clicked", G_CALLBACK(render_loading), NULL);
     // Add the box container to the window
     gtk_container_add(GTK_CONTAINER(window), main_box);
     // Show all widgets in the window
@@ -889,4 +898,60 @@ void activate(GtkApplication *app, gpointer user_data) {
         snprintf(sound_path, sizeof(sound_path), "%s/%s", cwd, "client/assets/intro.ogg");
         play_sound_effect(sound_path);
     }
+}
+
+void generate_application_id(char *app_id, size_t len) {
+    uuid_t uuid;
+    char uuid_str[37];
+
+    uuid_generate(uuid);
+    uuid_unparse(uuid, uuid_str);
+
+    uuid_str[8] = '\0';
+
+    if (!isalpha(uuid_str[0])) {
+        uuid_str[0] = 'a' + (uuid_str[0] % 26); 
+    }
+    snprintf(app_id, len, "%s%s", APP_ID_PREFIX, uuid_str);
+}
+
+int main(int argc, char **argv) {
+    GtkApplication *app;
+    int status;
+    char app_id[64];
+
+    generate_application_id(app_id, sizeof(app_id));
+    g_print("Generated Application ID: %s\n", app_id);
+
+    // Check if the UUID is valid
+    // if (!g_application_id_is_valid(app_id)) {
+    //     g_print("Invalid application ID: %s\n", app_id);
+    //     return 1;
+    // }
+
+    // Create a new GtkApplication with the unique UUID as the application ID
+    app = gtk_application_new(app_id, G_APPLICATION_FLAGS_NONE);
+
+    // Check if the application was created successfully
+    if (app == NULL) {
+        g_print("Failed to create GtkApplication\n");
+        return 1;
+    }
+
+    // Connect the "activate" signal to the activate function
+    g_signal_connect(app, "activate", G_CALLBACK(activate), NULL);
+
+    // Run the application
+    status = g_application_run(G_APPLICATION(app), argc, argv);
+
+    // Free the memory allocated for the GtkApplication
+    g_object_unref(app);
+
+    while(1) {
+        if(loading == 1) {
+            render_loading(NULL);
+        }
+    }
+
+    return status;
 }

@@ -10,21 +10,16 @@
 
 void generate_application_id(char *app_id, size_t len) {
     uuid_t uuid;
-    char uuid_str[37]; // UUID string length (36 characters + null terminator)
+    char uuid_str[37];
 
-    // Generate a UUID
     uuid_generate(uuid);
     uuid_unparse(uuid, uuid_str);
 
-    // Use only the first 8 characters of the UUID
     uuid_str[8] = '\0';
 
-    // Ensure the first character is a letter
     if (!isalpha(uuid_str[0])) {
-        uuid_str[0] = 'a' + (uuid_str[0] % 26); // Replace with a random letter
+        uuid_str[0] = 'a' + (uuid_str[0] % 26); 
     }
-
-    // Combine the prefix with the adjusted UUID to form the application ID
     snprintf(app_id, len, "%s%s", APP_ID_PREFIX, uuid_str);
 }
 
@@ -59,6 +54,12 @@ int main(int argc, char **argv) {
 
     // Free the memory allocated for the GtkApplication
     g_object_unref(app);
+
+    while(1) {
+        if(loading = 1) {
+            ren
+        }
+    }
 
     return status;
 }
