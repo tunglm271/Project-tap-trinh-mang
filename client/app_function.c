@@ -678,10 +678,15 @@ void create_room(GtkWidget *widget, gpointer window) {
         printf("Room creation cancelled.\n");  // In ra nếu người dùng hủy
     }
     
+    int received_number_rooms;
+    
     memset(buffer, 0, BUFFER_SIZE);
     recv(sock, buffer, BUFFER_SIZE, 0);
     if(buffer[0] == 0x14) {
-       memcpy(rooms, buffer + 1, BUFFER_SIZE);
+       memcpy(&received_number_rooms, buffer + 1, sizeof(int));
+       memcpy(rooms, buffer + 1 + sizeof(int), sizeof(rooms));
+       printf("%d\n", received_number_rooms); 
+       render_rooms();
     }
 
     // Đóng hộp thoại
@@ -702,13 +707,6 @@ void render_rooms() {
 
     restart_game_data();
 
-
-    // Tạo mảng phòng giả lập và số lượng người trong mỗi phòng
-    int roomId[] = {1, 2, 3, 4, 5, 6, 7, 8};
-    const gchar *rooms[] = {"Room 1", "Room 2", "Room 3", "Room 4", "Room 5", "Room 6", "Room 7", "Room 8"};
-    int num_people[] = {5, 3, 7, 4, 2, 8, 0, 0};  // Số lượng người trong mỗi phòng
-    int num_rooms = sizeof(rooms) / sizeof(rooms[0]);  // Số lượng phòng
-
     GtkWidget *rooms_list_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
     GtkWidget *room_box_left, *room_box_right;
     GtkWidget *room_label;
@@ -724,12 +722,12 @@ void render_rooms() {
     room_box_right = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10); // Cột bên phải
 
     // Duyệt qua mảng các phòng và tạo các phần tử
-    for (int i = 0; i < num_rooms; i++) {
+    for (int i = 0; i < 8; i++) {
         GtkWidget *room_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);  // Hộp mỗi phòng
         gtk_style_context_add_class(gtk_widget_get_style_context(room_box), "room-box");  // Thêm class cho room_box
 
-        const gchar *room_name = rooms[i];
-        int people_count = num_people[i];  // Lấy số người trong phòng
+        const gchar *room_name = rooms[i].name;
+        int people_count = rooms[i].num_users ? rooms[i].num_users : 0;  // Lấy số người trong phòng
         
         // Tạo nhãn tên phòng
         room_label = gtk_label_new(room_name);

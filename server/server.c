@@ -32,6 +32,26 @@ User user_name[MAX];
 
 char *choice[] = {"A.", "B.", "C.", "D."};
 
+void handle_login_request(int client_socket) {
+    char buffer[MAX] = {0};
+    recv(client_socket, buffer, MAX, 0);
+    // Process login request (this is a placeholder, implement your login logic here)
+    printf("Received login request: %s\n", buffer);
+    // Send login response (success or failure)
+    const char *response = "Login successful\n";
+    send(client_socket, response, strlen(response), 0);
+}
+
+void handle_register_request(int client_socket) {
+    char buffer[MAX] = {0};
+    recv(client_socket, buffer, MAX, 0);
+    // Process register request (this is a placeholder, implement your register logic here)
+    printf("Received register request: %s\n", buffer);
+    // Send register response (success or failure)
+    const char *response = "Register successful\n";
+    send(client_socket, response, strlen(response), 0);
+}
+
 bool isNumberInArray(int arr[], int size, int num) {
     for (int i = 0; i < size; i++) {
         if (arr[i] == num) {
@@ -150,7 +170,7 @@ int main() {
                        user_name[client_sockets[i]].id = client_sockets[i];
                        strcpy(user_name[client_sockets[i]].name, username);
                     } else { 
-                       memset(buffer, 0, MAX);
+                       memset(buffer, 0, MAX); 
                        buffer[0] = 0x03;
                        send(client_sockets[i], buffer, MAX, 0);
                       }
@@ -161,7 +181,8 @@ int main() {
                    add_room(room_name, user_name[client_sockets[i]].name);
                    memset(buffer, 0, MAX);
                    buffer[0] = 0x14;
-                   memcpy(buffer + 1, rooms, sizeof(rooms));
+                   memcpy(buffer + 1, &num_rooms, sizeof(int));
+                   memcpy(buffer + 1 + sizeof(int), rooms, sizeof(rooms));
                    send(sd, buffer, MAX, 0);
                   }
                 } 
