@@ -452,6 +452,17 @@ void render_question(GtkButton *button) {
 
 }
 
+void on_server_message(GIOChannel *source, GIOCondition condition, gpointer data) {
+    if(condition & G_IO_IN) {
+        memset(buffer, 0, BUFFER_SIZE);
+        recv(sock, buffer, BUFFER_SIZE, 0);
+        if(buffer[0] == 0x14) {
+            g_print("received rooms\n");
+        }
+    }
+    render_rooms();
+}
+
 void render_loading(GtkButton *button) {
     GtkWidget *spinner;
     GtkWidget *label;
@@ -481,6 +492,9 @@ void render_loading(GtkButton *button) {
 
     // Show all widgets in the window
     gtk_widget_show_all(main_box);
+
+    GIOChannel *channel = g_io_channel_unix_new(sock);
+    g_io_add_watch(channel, G_IO_IN, (GIOFunc)on_server_message, NULL);
 }
 
 void submit_name(GtkButton *button, gpointer user_data) {
@@ -524,7 +538,7 @@ void render_welcome_page(const gchar *username) {
     gtk_box_pack_start(GTK_BOX(main_box), welcome_text, TRUE, TRUE, 10);
     gtk_box_pack_start(GTK_BOX(main_box), start_btn, TRUE, FALSE, 0);
     // g_signal_connect(start_btn, "clicked", G_CALLBACK(convert_render_question), NULL);
-    g_signal_connect(start_btn, "clicked", G_CALLBACK(render_rooms), NULL);
+    g_signal_connect(start_btn, "clicked", G_CALLBACK(render_loading), NULL);
     // g_signal_connect(start_btn, "clicked", G_CALLBACK(render_summary_page), NULL);
     gtk_widget_show_all(GTK_WIDGET(main_box));  
 }
@@ -704,7 +718,6 @@ void render_rooms() {
     }
 
     gtk_orientable_set_orientation(GTK_ORIENTABLE(main_box), GTK_ORIENTATION_VERTICAL);
-
     restart_game_data();
 
     GtkWidget *rooms_list_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
