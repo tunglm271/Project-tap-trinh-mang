@@ -183,7 +183,11 @@ int main() {
                    buffer[0] = 0x14;
                    memcpy(buffer + 1, &num_rooms, sizeof(int));
                    memcpy(buffer + 1 + sizeof(int), rooms, sizeof(rooms));
-                   send(sd, buffer, MAX, 0);
+                   for(int j=0; j< MAX_CLIENTS; j++) {
+                     if(client_sockets[j] != 0) {
+                        send(client_sockets[j], buffer, MAX, 0);
+                     }
+                   }
                   }
                 } 
             }
