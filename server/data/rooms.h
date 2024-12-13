@@ -19,7 +19,7 @@ typedef struct {
 extern Room rooms[MAX_ROOMS];
 extern int num_rooms;
 
-void add_room(const char *name, const char *creator);
+int add_room(const char *name, const char *creator);
 void add_user_to_room(int room_id, const char *username);
 void remove_user_from_room(int room_id, const char *username);
 void remove_room(int room_id);

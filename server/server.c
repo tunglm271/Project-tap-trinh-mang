@@ -200,9 +200,14 @@ int main() {
                  else if(buffer[0] == 0x13) {
                    char room_name[MAX-1];
                    sscanf(buffer + 1, "%[^\n]", room_name);
-                   add_room(room_name, user_name[client_sockets[i]].name);
+                   int roomId = add_room(room_name, user_name[client_sockets[i]].name);
                    log_user_session("data/session_log.txt",user_name[client_sockets[i]].name, "create room");
                    check_render_room[i] = 0;
+
+                   memset(buffer, 0, MAX);
+                   sprintf(buffer, "%d", roomId);
+                   send(client_sockets[i], buffer, MAX, 0);
+
                    memset(buffer, 0, MAX);
                    buffer[0] = 0x14;
                    memcpy(buffer + 1, &num_rooms, sizeof(int));

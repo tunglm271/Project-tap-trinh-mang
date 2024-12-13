@@ -6,10 +6,10 @@
 Room rooms[MAX_ROOMS];
 int num_rooms = 0;
 
-void add_room(const char *name, const char *creator) {
+int add_room(const char *name, const char *creator) {
     if (num_rooms >= MAX_ROOMS) {
         printf("Cannot add more rooms. Maximum limit reached.\n");
-        return;
+        return -1;
     }
 
     Room *new_room = &rooms[num_rooms];
@@ -25,6 +25,7 @@ void add_room(const char *name, const char *creator) {
     new_room->users[0][MAX_NAME_LEN - 1] = '\0';
 
     num_rooms++;
+    return new_room->id;
 }
 
 void add_user_to_room(int room_id, const char *username) {
