@@ -454,13 +454,17 @@ void render_question(GtkButton *button) {
 
 void on_server_message(GIOChannel *source, GIOCondition condition, gpointer data) {
     if(condition & G_IO_IN) {
+        int received_number_rooms;   
         memset(buffer, 0, BUFFER_SIZE);
         recv(sock, buffer, BUFFER_SIZE, 0);
         if(buffer[0] == 0x14) {
-            g_print("received rooms\n");
+            memcpy(&received_number_rooms, buffer + 1, sizeof(int));
+            memcpy(rooms, buffer + 1 + sizeof(int), sizeof(rooms));
+            printf("%d\n", received_number_rooms); 
+            render_rooms();
+            g_io_channel_shutdown(source, TRUE, NULL);
         }
     }
-    render_rooms();
 }
 
 void render_loading(GtkButton *button) {
@@ -538,7 +542,7 @@ void render_welcome_page(const gchar *username) {
     gtk_box_pack_start(GTK_BOX(main_box), welcome_text, TRUE, TRUE, 10);
     gtk_box_pack_start(GTK_BOX(main_box), start_btn, TRUE, FALSE, 0);
     // g_signal_connect(start_btn, "clicked", G_CALLBACK(convert_render_question), NULL);
-    g_signal_connect(start_btn, "clicked", G_CALLBACK(render_loading), NULL);
+    g_signal_connect(start_btn, "clicked", G_CALLBACK(render_rooms), NULL);
     // g_signal_connect(start_btn, "clicked", G_CALLBACK(render_summary_page), NULL);
     gtk_widget_show_all(GTK_WIDGET(main_box));  
 }
@@ -692,16 +696,6 @@ void create_room(GtkWidget *widget, gpointer window) {
         printf("Room creation cancelled.\n");  // In ra nếu người dùng hủy
     }
     
-    int received_number_rooms;
-    
-    memset(buffer, 0, BUFFER_SIZE);
-    recv(sock, buffer, BUFFER_SIZE, 0);
-    if(buffer[0] == 0x14) {
-       memcpy(&received_number_rooms, buffer + 1, sizeof(int));
-       memcpy(rooms, buffer + 1 + sizeof(int), sizeof(rooms));
-       printf("%d\n", received_number_rooms); 
-       render_rooms();
-    }
 
     // Đóng hộp thoại
     gtk_widget_destroy(dialog);
@@ -791,6 +785,9 @@ void render_rooms() {
     gtk_box_pack_start(GTK_BOX(main_box), create_room_btn, FALSE, FALSE, 10);
 
     gtk_widget_show_all(GTK_WIDGET(main_box));
+
+    GIOChannel *channel = g_io_channel_unix_new(sock);
+    g_io_add_watch(channel, G_IO_IN, (GIOFunc)on_server_message, NULL);
 }
 
 void render_summary_page(bool isGiveUp) {
