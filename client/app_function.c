@@ -55,7 +55,6 @@ void handle_50_50(GtkWidget *widget, gpointer data);
 void handle_call_friend(GtkWidget *widget);
 void on_endgame_dialog_response(GtkDialog *dialog, gint response_id, gpointer endgame_data);
 void on_eliminate_dialog_response(GtkDialog *dialog, gint response_id, gpointer user_data);
-void waiting_for_start_game_signal(GIOChannel *source, GIOCondition condition, gpointer data);
 void handle_give_up(GtkButton *button) {
     // xu li khi nguoi choi bo cuoc
     render_summary_page(TRUE);
@@ -466,6 +465,9 @@ void on_server_message(GIOChannel *source, GIOCondition condition, gpointer data
             number_rooms = received_number_rooms;
             render_rooms();
         }
+        if (buffer[0] == 0x16) {
+            printf("room started!\n");
+        }
     }
 }
 
@@ -498,9 +500,6 @@ void render_loading(GtkButton *button) {
 
     // Show all widgets in the window
     gtk_widget_show_all(main_box);
-
-    GIOChannel *channel = g_io_channel_unix_new(sock);
-    g_io_add_watch(channel, G_IO_IN, (GIOFunc)waiting_for_start_game_signal, NULL);
 }
 
 void submit_name(GtkButton *button, gpointer user_data) {
@@ -668,19 +667,6 @@ void render_register(GtkButton *button) {
 
     gtk_widget_show_all(main_box);  
 }
-
-void waiting_for_start_game_signal(GIOChannel *source, GIOCondition condition, gpointer data) {
-    if(condition & G_IO_IN) {  
-        memset(buffer, 0, BUFFER_SIZE);
-
-        recv(sock, buffer, BUFFER_SIZE, 0);
-        if(buffer[0] == 0x16) {
-            printf("room started!\n");
-            render_question(NULL);
-        }
-    }
-}
-
 
 void join_room(GtkWidget *widget, gpointer data) {
     memset(buffer, 0, BUFFER_SIZE);
