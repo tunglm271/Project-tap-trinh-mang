@@ -72,6 +72,7 @@ int main() {
     struct sockaddr_in address;
     int addrlen = sizeof(address);
     char buffer[MAX] = {0};
+    int check_render_room[MAX] = {0};
     
 
     loadQuestions("data/quiz_library_easy.txt", quizArrayEasy, &count, level);
@@ -169,6 +170,13 @@ int main() {
                        send(client_sockets[i], buffer, MAX, 0);
                        user_name[client_sockets[i]].id = client_sockets[i];
                        strcpy(user_name[client_sockets[i]].name, username);
+
+                        memset(buffer, 0, MAX);
+                        buffer[0] = 0x14;
+                        memcpy(buffer + 1, &num_rooms, sizeof(int));
+                        memcpy(buffer + 1 + sizeof(int), rooms, sizeof(rooms));
+                        send(client_sockets[i], buffer, MAX, 0);
+                            
                     } else { 
                        memset(buffer, 0, MAX); 
                        buffer[0] = 0x03;
@@ -184,11 +192,17 @@ int main() {
                    memcpy(buffer + 1, &num_rooms, sizeof(int));
                    memcpy(buffer + 1 + sizeof(int), rooms, sizeof(rooms));
                    for(int j=0; j< MAX_CLIENTS; j++) {
-                     if(client_sockets[j] > 0) {
+                     if(client_sockets[j] > 0 && check_render_room[j] == 1) {
                         send(client_sockets[j], buffer, MAX, 0);
                      }
                    }
                   }
+                 else if (buffer[0] == 0x17) {
+                     check_render_room[i] = 1;
+                 } 
+                 else if (buffer[0] == 0x18) {
+                     check_render_room[i] = 0;
+                 }
                 } 
             }
          }
