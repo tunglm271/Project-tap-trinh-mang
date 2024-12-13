@@ -189,6 +189,7 @@ int main() {
                    sscanf(buffer + 1, "%[^\n]", room_name);
                    add_room(room_name, user_name[client_sockets[i]].name);
                    log_user_session("data/session_log.txt",user_name[client_sockets[i]].name, "create room");
+                   check_render_room[i] = 0;
                    memset(buffer, 0, MAX);
                    buffer[0] = 0x14;
                    memcpy(buffer + 1, &num_rooms, sizeof(int));

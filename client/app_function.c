@@ -548,14 +548,14 @@ void submit_name(GtkButton *button, gpointer user_data) {
 void render_welcome_page(const gchar *username) {
     GtkWidget *welcome_text = gtk_label_new(NULL);
     GtkWidget *start_btn = gtk_button_new_with_label("Start game");
-    gtk_label_set_text(GTK_LABEL(welcome_text), g_strdup_printf("Welcome %s", username));
+    gtk_label_set_text(GTK_LABEL(welcome_text), g_strdup_printf("%s", username));
     gtk_widget_set_name(welcome_text, "welcome-text");
     remove_all_children(GTK_CONTAINER(main_box));
 
     gtk_box_pack_start(GTK_BOX(main_box), welcome_text, TRUE, TRUE, 10);
     gtk_box_pack_start(GTK_BOX(main_box), start_btn, TRUE, FALSE, 0);
-    // g_signal_connect(start_btn, "clicked", G_CALLBACK(convert_render_question), NULL);
-    g_signal_connect(start_btn, "clicked", G_CALLBACK(render_rooms), NULL);
+    g_signal_connect(start_btn, "clicked", G_CALLBACK(render_question), NULL);
+    // g_signal_connect(start_btn, "clicked", G_CALLBACK(render_rooms), NULL);
     // g_signal_connect(start_btn, "clicked", G_CALLBACK(render_summary_page), NULL);
     gtk_widget_show_all(GTK_WIDGET(main_box));  
 }
@@ -719,6 +719,7 @@ void create_room(GtkWidget *widget, gpointer window) {
         buffer[0] = 0x13;
         sprintf(buffer+1, "%s\n", room_name);
         send(sock, buffer, BUFFER_SIZE, 0);
+        render_welcome_page("Wait for other people!");
         
     } else {
         printf("Room creation cancelled.\n");  // In ra nếu người dùng hủy
