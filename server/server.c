@@ -184,6 +184,19 @@ int main() {
                        send(client_sockets[i], buffer, MAX, 0);
                       }
                     }
+                 if (buffer[0] == 0x04) {
+                       sscanf(buffer+1, "username:%[^;];\npassword:%s\n", username, password);
+                       if(addUserToFile("data/user.txt", username, password, "anh@gmail.com") == 1) {
+                       memset(buffer, 0, MAX);
+                       buffer[0] = 0x05;
+                       send(client_sockets[i], buffer, MAX, 0);
+                       log_user_session("data/session_log.txt",username, "register");
+                 } else {
+                       memset(buffer, 0, MAX);
+                       buffer[0] = 0x06;
+                       send(client_sockets[i], buffer, MAX, 0);
+                       }
+                 }   
                  else if(buffer[0] == 0x13) {
                    char room_name[MAX-1];
                    sscanf(buffer + 1, "%[^\n]", room_name);

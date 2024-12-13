@@ -158,6 +158,15 @@ button > label {
     font-weight: bold;
 }
 
+#view-history-btn {
+    border: none;
+    background: #4CAF50;
+}
+
+#view-history-btn:active {
+    background: orange;
+}
+
 .create-room-btn:hover {
     background-color: #45a049; /* Màu xanh lá đậm khi hover */
 }
