@@ -169,6 +169,13 @@ int main() {
                        send(client_sockets[i], buffer, MAX, 0);
                        user_name[client_sockets[i]].id = client_sockets[i];
                        strcpy(user_name[client_sockets[i]].name, username);
+
+                        memset(buffer, 0, MAX);
+                        buffer[0] = 0x14;
+                        memcpy(buffer + 1, &num_rooms, sizeof(int));
+                        memcpy(buffer + 1 + sizeof(int), rooms, sizeof(rooms));
+                        send(client_sockets[i], buffer, MAX, 0);
+                            
                     } else { 
                        memset(buffer, 0, MAX); 
                        buffer[0] = 0x03;

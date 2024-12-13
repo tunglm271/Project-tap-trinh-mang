@@ -523,9 +523,20 @@ void submit_name(GtkButton *button, gpointer user_data) {
         sscanf(buffer + 1, "%[^;];%d", user_name, &client_id);
         printf("%s\n", user_name);
         printf("%d\n", client_id);
-        render_welcome_page(username);
+        // render_welcome_page(username);
+        memset(buffer, 0, BUFFER_SIZE);
+        recv(sock, buffer, BUFFER_SIZE, 0);
+        int received_number_rooms;
+        if(buffer[0] == 0x14) {
+            memcpy(&received_number_rooms, buffer + 1, sizeof(int));
+            memcpy(rooms, buffer + 1 + sizeof(int), sizeof(rooms));
+            printf("%d\n", received_number_rooms); 
+            number_rooms = received_number_rooms;
+            render_rooms();
+        }
         g_free(data);
     } else {
+        printf("%X\n", buffer[0]);
         remove_child_by_name(GTK_CONTAINER(main_box), "error-label");
         GtkWidget *error_label = gtk_label_new("username or password is incorrect!");
         gtk_widget_set_name(error_label, "error-label");
