@@ -13,6 +13,8 @@
 #define PORT 8080
 #define BUFFER_SIZE 8192
 
+
+int received_number_rooms; 
 int sock;
 struct sockaddr_in serv_addr;
 char buffer[BUFFER_SIZE] = {0};
@@ -453,8 +455,7 @@ void render_question(GtkButton *button) {
 }
 
 void on_server_message(GIOChannel *source, GIOCondition condition, gpointer data) {
-    if(condition & G_IO_IN) {
-        int received_number_rooms;   
+    if(condition & G_IO_IN) {  
         memset(buffer, 0, BUFFER_SIZE);
         recv(sock, buffer, BUFFER_SIZE, 0);
         if(buffer[0] == 0x14) {
@@ -701,6 +702,10 @@ void create_room(GtkWidget *widget, gpointer window) {
 }
 
 
+void render_play_game() {
+    
+}
+
 
 void render_rooms() {
 
@@ -728,7 +733,7 @@ void render_rooms() {
     room_box_right = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10); // Cột bên phải
 
     // Duyệt qua mảng các phòng và tạo các phần tử
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < received_number_rooms; i++) {
         GtkWidget *room_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);  // Hộp mỗi phòng
         gtk_style_context_add_class(gtk_widget_get_style_context(room_box), "room-box");  // Thêm class cho room_box
 
