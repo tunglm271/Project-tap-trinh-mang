@@ -30,7 +30,6 @@ username: test
 time: 2024-12-13 22:16:58
 action: login
 
-<<<<<<< HEAD
 username: test
 time: 2024-12-13 22:28:09
 action: login
@@ -118,7 +117,6 @@ action: login
 username: test
 time: 2024-12-13 22:50:19
 action: create room
-=======
 username: Anh
 time: 2024-12-13 22:19:31
 action: login
@@ -190,5 +188,44 @@ action: login
 username: Anh
 time: 2024-12-13 22:48:37
 action: login
->>>>>>> 6f5945d7394db8b3adf4a9972658477923803744
+
+username: test
+time: 2024-12-13 22:55:47
+action: login
+
+username: test
+time: 2024-12-13 22:56:02
+action: create room
+
+username: Anh
+time: 2024-12-13 22:56:12
+action: login
+
+username: Anh
+time: 2024-12-13 22:56:39
+action: create room
+
+username: test
+time: 2024-12-13 22:57:01
+action: login
+
+username: test
+time: 2024-12-13 23:00:49
+action: login
+
+username: test
+time: 2024-12-13 23:01:01
+action: create room
+
+username: Anh
+time: 2024-12-13 23:01:11
+action: login
+
+username: test
+time: 2024-12-13 23:18:51
+action: login
+
+username: test
+time: 2024-12-13 23:18:56
+action: create room
 

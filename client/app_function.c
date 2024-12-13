@@ -667,13 +667,18 @@ void waiting_for_start_game_signal(GIOChannel *source, GIOCondition condition, g
 
 
 void join_room(GtkWidget *widget, gpointer data) {
-    const gchar *room_name = (const gchar *)data;
+    memset(buffer, 0, BUFFER_SIZE);
+    buffer[0] = 0x18;
+    send(sock, buffer, BUFFER_SIZE, 0);
+
+    gpointer *newData = (gpointer *)data;
+    int roomId = GPOINTER_TO_INT(newData[0]);
     memset(buffer, 0, BUFFER_SIZE);
     buffer[0] = 0x15;
-    sprintf(buffer+1, "%s\n", room_name);
+    sprintf(buffer+1, "%d", roomId);
     send(sock, buffer, BUFFER_SIZE, 0);
     render_loading(NULL);
-    g_print("You have joined the room: %s\n", room_name);
+    g_print("You have joined the room: %d\n", roomId);
 
 }
 
@@ -837,8 +842,10 @@ void render_rooms() {
         join_btn = gtk_button_new_with_label("Join room");
         gtk_style_context_add_class(gtk_widget_get_style_context(join_btn), "join-btn");
         
+        gpointer *data = g_new(gpointer, 1);
+        data[0] = GINT_TO_POINTER(rooms[i].id);
         // Gắn tín hiệu khi nhấn nút để tham gia phòng
-        g_signal_connect(join_btn, "clicked", G_CALLBACK(join_room), (gpointer)room_name);
+        g_signal_connect(join_btn, "clicked", G_CALLBACK(join_room), data);
 
         // Thêm các phần tử vào hộp mỗi phòng
         gtk_box_pack_start(GTK_BOX(room_box), room_label, TRUE, TRUE, 5);
