@@ -736,6 +736,9 @@ void render_play_game() {
 
 
 void render_rooms() {
+    memset(buffer, 0, BUFFER_SIZE);
+    buffer[0] = 0x17;
+    send(sock, buffer, BUFFER_SIZE, 0);
 
     remove_all_children(GTK_CONTAINER(main_box));
     if(countdown_timeout_id) {
