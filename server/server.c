@@ -184,7 +184,7 @@ int main() {
                    memcpy(buffer + 1, &num_rooms, sizeof(int));
                    memcpy(buffer + 1 + sizeof(int), rooms, sizeof(rooms));
                    for(int j=0; j< MAX_CLIENTS; j++) {
-                     if(client_sockets[j] != 0) {
+                     if(client_sockets[j] > 0) {
                         send(client_sockets[j], buffer, MAX, 0);
                      }
                    }

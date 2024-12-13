@@ -462,7 +462,6 @@ void on_server_message(GIOChannel *source, GIOCondition condition, gpointer data
             memcpy(rooms, buffer + 1 + sizeof(int), sizeof(rooms));
             printf("%d\n", received_number_rooms); 
             render_rooms();
-            g_io_channel_shutdown(source, TRUE, NULL);
         }
     }
 }
