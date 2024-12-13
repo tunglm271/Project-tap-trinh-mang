@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
     // }
 
     // Create a new GtkApplication with the unique UUID as the application ID
-    app = gtk_application_new(app_id, G_APPLICATION_FLAGS_NONE);
+    app = gtk_application_new(app_id, 0);
 
     // Check if the application was created successfully
     if (app == NULL) {
