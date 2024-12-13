@@ -55,7 +55,7 @@ void handle_50_50(GtkWidget *widget, gpointer data);
 void handle_call_friend(GtkWidget *widget);
 void on_endgame_dialog_response(GtkDialog *dialog, gint response_id, gpointer endgame_data);
 void on_eliminate_dialog_response(GtkDialog *dialog, gint response_id, gpointer user_data);
-
+void waiting_for_start_game_signal(GIOChannel *source, GIOCondition condition, gpointer data);
 void handle_give_up(GtkButton *button) {
     // xu li khi nguoi choi bo cuoc
     render_summary_page(TRUE);
@@ -498,7 +498,7 @@ void render_loading(GtkButton *button) {
     gtk_widget_show_all(main_box);
 
     GIOChannel *channel = g_io_channel_unix_new(sock);
-    g_io_add_watch(channel, G_IO_IN, (GIOFunc)on_server_message, NULL);
+    g_io_add_watch(channel, G_IO_IN, (GIOFunc)waiting_for_start_game_signal, NULL);
 }
 
 void submit_name(GtkButton *button, gpointer user_data) {
@@ -642,9 +642,24 @@ void render_register(GtkButton *button) {
     gtk_widget_show_all(main_box);  
 }
 
+void waiting_for_start_game_signal(GIOChannel *source, GIOCondition condition, gpointer data) {
+    if(condition & G_IO_IN) {  
+        memset(buffer, 0, BUFFER_SIZE);
+        recv(sock, buffer, BUFFER_SIZE, 0);
+        if(buffer[0] == 0x16) {
+            render_question(NULL);
+        }
+    }
+}
+
+
 void join_room(GtkWidget *widget, gpointer data) {
     const gchar *room_name = (const gchar *)data;
-    render_question(NULL);
+    memset(buffer, 0, BUFFER_SIZE);
+    buffer[0] = 0x15;
+    sprintf(buffer+1, "%s\n", room_name);
+    send(sock, buffer, BUFFER_SIZE, 0);
+    render_loading(NULL);
     g_print("You have joined the room: %s\n", room_name);
 
 }
