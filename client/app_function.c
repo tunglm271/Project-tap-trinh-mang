@@ -22,7 +22,7 @@ static guint countdown_timeout_id = 0;
 GtkWidget *window;
 GtkWidget *main_box;
 Room rooms[MAX_ROOMS];
-char user_name[BUFFER_SIZE];
+char user_name[1024];
 int client_id;
 
 GameData user_game_data;
@@ -690,7 +690,7 @@ void join_room(GtkWidget *widget, gpointer data) {
     int roomId = GPOINTER_TO_INT(newData[0]);
     memset(buffer, 0, BUFFER_SIZE);
     buffer[0] = 0x15;
-    sprintf(buffer+1, "%d", roomId);
+    sprintf(buffer+1, "%d;%s", roomId, user_name);
     send(sock, buffer, BUFFER_SIZE, 0);
     render_loading(NULL);
     g_print("You have joined the room: %d\n", roomId);

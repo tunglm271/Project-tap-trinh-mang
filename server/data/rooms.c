@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 Room rooms[MAX_ROOMS];
 int num_rooms = 0;
@@ -97,6 +98,28 @@ void print_rooms() {
         }
         printf("\n\n");
     }
+}
+
+char** boardcast_users_in_rooms(int room_id, int *num_users_out) {
+    char **user_list = (char**)malloc(MAX_USERS * sizeof(char*)); 
+    int user_count = 0;
+
+    for (int i = 0; i < num_rooms; i++) {
+        if (rooms[i].id == room_id) {
+            for (int j = 0; j < rooms[i].num_users; j++) {
+                int check = strcmp(rooms[i].creator, rooms[i].users[j]);
+                if (check != 0) {
+                    user_list[user_count] = (char*)malloc(MAX_NAME_LEN * sizeof(char));
+                    strncpy(user_list[user_count], rooms[i].users[j], MAX_NAME_LEN);
+                    user_count++;
+                }
+            }
+            break;  
+        }
+    }
+
+    *num_users_out = user_count;
+    return user_list;
 }
 
 void remove_room(int room_id) {

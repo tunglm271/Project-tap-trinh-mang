@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #define MAX_USERS 10
 #define MAX_NAME_LEN 50
@@ -24,5 +25,6 @@ void add_user_to_room(int room_id, const char *username);
 void remove_user_from_room(int room_id, const char *username);
 void remove_room(int room_id);
 void print_rooms();
+char** boardcast_users_in_rooms(int room_id, int *num_users_out);
 
 #endif

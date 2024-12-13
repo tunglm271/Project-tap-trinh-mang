@@ -184,7 +184,7 @@ int main() {
                        send(client_sockets[i], buffer, MAX, 0);
                       }
                     }
-                 if (buffer[0] == 0x04) {
+                 else if (buffer[0] == 0x04) {
                        sscanf(buffer+1, "username:%[^;];\npassword:%s\n", username, password);
                        if(addUserToFile("data/user.txt", username, password, "anh@gmail.com") == 1) {
                        memset(buffer, 0, MAX);
@@ -223,6 +223,39 @@ int main() {
                  } 
                  else if (buffer[0] == 0x18) {
                      check_render_room[i] = 0;
+                 }
+                 else if (buffer[0] == 0x15) {
+                     char *token = strtok(buffer + 1, ";");
+                     int roomId;
+
+                     if (token != NULL) {
+
+                         roomId = atoi(token);
+
+                         token = strtok(NULL, ";");
+                     } else {
+                           printf("Invalid format: Missing roomId and user_name.\n");
+                     }
+                       
+                     add_user_to_room(roomId, token);
+                 }
+                 else if (buffer[0] == 0x19) {
+                    int roomID = atoi(buffer+1);
+                    char socket_in_room[1024]; 
+                    int num_users;
+                    char **users_in_room = boardcast_users_in_rooms(1, &num_users);
+                    
+                    for(int k=4; k < 15; k++) {
+                         for(int i=0; i < num_users; i++) {
+                             int check = strcmp(user_name[k].name, users_in_room[i]);
+                             if(check == 0) {
+                                 memset(buffer, 0, MAX);
+                                 buffer[0] = 0x16;
+                                 send(k, buffer, MAX, 0);
+                             };
+                         }
+                    }
+                    
                  }
                 } 
             }
