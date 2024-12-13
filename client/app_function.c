@@ -14,7 +14,7 @@
 #define BUFFER_SIZE 8192
 
 
-int received_number_rooms; 
+int number_rooms; 
 int sock;
 struct sockaddr_in serv_addr;
 char buffer[BUFFER_SIZE] = {0};
@@ -458,10 +458,12 @@ void on_server_message(GIOChannel *source, GIOCondition condition, gpointer data
     if(condition & G_IO_IN) {  
         memset(buffer, 0, BUFFER_SIZE);
         recv(sock, buffer, BUFFER_SIZE, 0);
+        int received_number_rooms;
         if(buffer[0] == 0x14) {
             memcpy(&received_number_rooms, buffer + 1, sizeof(int));
             memcpy(rooms, buffer + 1 + sizeof(int), sizeof(rooms));
             printf("%d\n", received_number_rooms); 
+            number_rooms = received_number_rooms;
             render_rooms();
         }
     }
@@ -748,7 +750,7 @@ void render_rooms() {
     room_box_right = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10); // Cột bên phải
 
     // Duyệt qua mảng các phòng và tạo các phần tử
-    for (int i = 0; i < received_number_rooms; i++) {
+    for (int i = 0; i < number_rooms; i++) {
         GtkWidget *room_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);  // Hộp mỗi phòng
         gtk_style_context_add_class(gtk_widget_get_style_context(room_box), "room-box");  // Thêm class cho room_box
 
