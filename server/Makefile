@@ -1,5 +1,5 @@
 CC = gcc
-SRC = server.c data/data.c data/rooms.c
+SRC = server.c data/data.c data/rooms.c data/log_session.c
 TARGET = server
 
 all: $(TARGET)

@@ -11,6 +11,7 @@
 
 #include "data/data.h"
 #include "data/rooms.h"
+#include "data/log_session.h"
 
 #define PORT 8080
 #define MAX_CLIENTS 20
@@ -169,12 +170,12 @@ int main() {
                        send(client_sockets[i], buffer, MAX, 0);
                        user_name[client_sockets[i]].id = client_sockets[i];
                        strcpy(user_name[client_sockets[i]].name, username);
-
                         memset(buffer, 0, MAX);
                         buffer[0] = 0x14;
                         memcpy(buffer + 1, &num_rooms, sizeof(int));
                         memcpy(buffer + 1 + sizeof(int), rooms, sizeof(rooms));
                         send(client_sockets[i], buffer, MAX, 0);
+                        log_user_session("data/session_log.txt",username, "login");
                             
                     } else { 
                        memset(buffer, 0, MAX); 
@@ -186,6 +187,7 @@ int main() {
                    char room_name[MAX-1];
                    sscanf(buffer + 1, "%[^\n]", room_name);
                    add_room(room_name, user_name[client_sockets[i]].name);
+                   log_user_session("data/session_log.txt",user_name[client_sockets[i]].name, "create room");
                    memset(buffer, 0, MAX);
                    buffer[0] = 0x14;
                    memcpy(buffer + 1, &num_rooms, sizeof(int));
