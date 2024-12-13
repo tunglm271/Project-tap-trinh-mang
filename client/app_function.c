@@ -552,7 +552,7 @@ void render_question_wrapper(GtkWidget *widget, gpointer data) {
     int roomId = GPOINTER_TO_INT(newData[0]);
     sprintf(buffer+1, "%d", roomId);
     send(sock, buffer, BUFFER_SIZE, 0);
-    // render_question(NULL);
+    render_question(NULL);
 }
 
 void render_welcome_page(const gchar *text, int roomId) {
@@ -675,6 +675,7 @@ void waiting_for_start_game_signal(GIOChannel *source, GIOCondition condition, g
 
         recv(sock, buffer, BUFFER_SIZE, 0);
         if(buffer[0] == 0x16) {
+            printf("room started!\n");
             render_question(NULL);
         }
     }
