@@ -734,6 +734,56 @@ void render_play_game() {
     
 }
 
+void render_history() {
+    remove_all_children(GTK_CONTAINER(main_box));
+
+    GtkWidget *history_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
+    gtk_container_set_border_width(GTK_CONTAINER(history_box), 20);
+
+    GtkWidget *title_label = gtk_label_new("Game History");
+    gtk_widget_set_name(title_label, "history-title");
+    gtk_box_pack_start(GTK_BOX(history_box), title_label, FALSE, FALSE, 10);
+
+    // memset(buffer, 0, BUFFER_SIZE);
+    // buffer[0] = 0x18; // Assuming 0x18 is the code to request game history
+    // send(sock, buffer, BUFFER_SIZE, 0);
+
+    // memset(buffer, 0, BUFFER_SIZE);
+    // recv(sock, buffer, BUFFER_SIZE, 0);
+
+    // char *history_entry = strtok(buffer, "\n");
+    // while (history_entry != NULL) {
+    //     GtkWidget *entry_label = gtk_label_new(history_entry);
+    //     gtk_widget_set_name(entry_label, "history-entry");
+    //     gtk_box_pack_start(GTK_BOX(history_box), entry_label, FALSE, FALSE, 5);
+    //     history_entry = strtok(NULL, "\n");
+    // }
+
+    GtkWidget *grid = gtk_grid_new();
+    gtk_grid_set_column_homogeneous(GTK_GRID(grid), TRUE);
+    gtk_grid_set_column_spacing(GTK_GRID(grid), 10);
+
+    for (int i = 0; i < 5; i++) {
+        gchar *room_text = g_strdup_printf("Room %d", i + 1);
+        GtkWidget *room_label = gtk_label_new(room_text);
+        g_free(room_text);
+
+        GtkWidget *money_label = gtk_label_new(money_labels[i]);
+
+        gtk_grid_attach(GTK_GRID(grid), room_label, 0, i, 1, 1);
+        gtk_grid_attach(GTK_GRID(grid), money_label, 1, i, 1, 1);
+    }
+
+    gtk_box_pack_start(GTK_BOX(history_box), grid, FALSE, FALSE, 5);
+
+    GtkWidget *back_button = gtk_button_new_with_label("Back");
+    g_signal_connect(back_button, "clicked", G_CALLBACK(render_rooms), NULL);
+    gtk_box_pack_start(GTK_BOX(history_box), back_button, FALSE, FALSE, 10);
+
+    gtk_box_pack_start(GTK_BOX(main_box), history_box, TRUE, TRUE, 0);
+    gtk_widget_show_all(main_box);
+}
+
 
 void render_rooms() {
     memset(buffer, 0, BUFFER_SIZE);
@@ -755,6 +805,7 @@ void render_rooms() {
     GtkWidget *join_btn;
     GtkWidget *people_label;
     GtkWidget *create_room_btn;
+    GtkWidget *view_history_btn;
 
     // Xóa tất cả các phần tử con hiện tại trong container chính
     remove_all_children(GTK_CONTAINER(main_box));
@@ -816,8 +867,13 @@ void render_rooms() {
     // Gắn tín hiệu khi nhấn nút để tạo phòng mới
     g_signal_connect(create_room_btn, "clicked", G_CALLBACK(create_room), NULL);
 
+    view_history_btn = gtk_button_new_with_label("View History");
+
     // Thêm nút vào main_box dưới 2 cột
     gtk_box_pack_start(GTK_BOX(main_box), create_room_btn, FALSE, FALSE, 10);
+    gtk_box_pack_start(GTK_BOX(main_box), view_history_btn, FALSE, FALSE, 10);
+    gtk_widget_set_name(view_history_btn, "view-history-btn");
+    g_signal_connect(view_history_btn, "clicked", G_CALLBACK(render_history), NULL);
 
     gtk_widget_show_all(GTK_WIDGET(main_box));
 
