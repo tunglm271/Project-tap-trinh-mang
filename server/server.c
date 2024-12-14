@@ -244,6 +244,7 @@ int main() {
                        strncat(buffer, quizArrayEasy[questionEasy[number]].option[i], MAX - strlen(buffer) - 1); 
                        strncat(buffer, "\n", MAX - strlen(buffer) - 1);
                     }
+                    previousNumber = questionEasy[number];
                    }
                    
                    if(number > 5 && number <= 10) {
@@ -254,6 +255,7 @@ int main() {
                        strncat(buffer, quizArrayMedium[questionMedium[number]].option[i], MAX - strlen(buffer) - 1); 
                        strncat(buffer, "\n", MAX - strlen(buffer) - 1);
                     }
+                    previousNumber = questionMedium[number];
                    }
                    
                    if(number > 10) {
@@ -264,10 +266,10 @@ int main() {
                        strncat(buffer, quizArrayHard[questionHard[number]].option[i], MAX - strlen(buffer) - 1); 
                        strncat(buffer, "\n", MAX - strlen(buffer) - 1);
                     }
+                    previousNumber = questionHard[number];
                    }
                      
                     send(client_sockets[i], buffer, MAX, 0);
-                    previousNumber = questionEasy[number];
                  }
                  else if (buffer[0] == 0x08) {
                     if(number <= 5) {
@@ -369,7 +371,7 @@ int main() {
                              };
                          }
                     }
-                    
+
                  }
                 } 
             }
