@@ -437,13 +437,19 @@ int main() {
                  } else if(buffer[0] == 0x22) {
                     int count;
                     Result *results = get_user_results("data/result.txt", username, &count);
-                    memset(buffer, 0, MAX);
-                    int offset = 0;
-                    for (int i = 0; i < count; i++) { 
-                        int written = snprintf(buffer + offset, sizeof(buffer) - offset, "%s;%s\n", results[i].username, results[i].result);
-                        offset += written;
+                    if (count == 0) {
+                        memset(buffer, 0, MAX);
+                        buffer[0] = 0x23;
+                        send(client_sockets[i], buffer, 1, 0);
+                    } else {
+                        memset(buffer, 0, MAX);
+                        int offset = 0;
+                        for (int i = 0; i < count; i++) { 
+                            int written = snprintf(buffer + offset, sizeof(buffer) - offset, "%s;%s\n", results[i].username, results[i].result);
+                            offset += written;
+                        }
+                        send(client_sockets[i], buffer, offset, 0);
                     }
-                    send(client_sockets[i], buffer, offset, 0);
                  }
 
                 } 

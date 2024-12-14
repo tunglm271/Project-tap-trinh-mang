@@ -766,25 +766,28 @@ void render_history() {
     send(sock, buffer, BUFFER_SIZE, 0);
 
     recv(sock, buffer, BUFFER_SIZE, 0);
+    if (buffer[0] == 0x23) {
+        GtkWidget *no_history_label = gtk_label_new("No game history available.");
+        gtk_box_pack_start(GTK_BOX(history_box), no_history_label, FALSE, FALSE, 5);
+    } else {
+        GtkWidget *grid = gtk_grid_new();
+        gtk_grid_set_column_homogeneous(GTK_GRID(grid), TRUE);
+        gtk_grid_set_column_spacing(GTK_GRID(grid), 10);
 
-
-    GtkWidget *grid = gtk_grid_new();
-    gtk_grid_set_column_homogeneous(GTK_GRID(grid), TRUE);
-    gtk_grid_set_column_spacing(GTK_GRID(grid), 10);
-
-    char *line = strtok(buffer, "\n");
-    int row = 0;
-    while (line != NULL) {
-        char username[50];
-        char result[50];
-        sscanf(line, "%[^;];%s", username, result);
-        GtkWidget *username_label = gtk_label_new(username);
-        GtkWidget *result_label = gtk_label_new(result);
-        gtk_grid_attach(GTK_GRID(grid), username_label, 0, row, 1, 1);
-        gtk_grid_attach(GTK_GRID(grid), result_label, 1, row, 1, 1);
-        printf("Username: %s, Result: %s\n", username, result);
-        line = strtok(NULL, "\n"); // Move to the next line
-        row++;
+        char *line = strtok(buffer, "\n");
+        int row = 0;
+        while (line != NULL) {
+            char username[50];
+            char result[50];
+            sscanf(line, "%[^;];%s", username, result);
+            GtkWidget *username_label = gtk_label_new(username);
+            GtkWidget *result_label = gtk_label_new(result);
+            gtk_grid_attach(GTK_GRID(grid), username_label, 0, row, 1, 1);
+            gtk_grid_attach(GTK_GRID(grid), result_label, 1, row, 1, 1);
+            line = strtok(NULL, "\n");
+            row++;
+        }
+        gtk_box_pack_start(GTK_BOX(history_box), grid, FALSE, FALSE, 5);
     }
     // char *history_entry = strtok(buffer, "\n");
     // while (history_entry != NULL) {
@@ -805,7 +808,6 @@ void render_history() {
     //     gtk_grid_attach(GTK_GRID(grid), money_label, 1, i, 1, 1);
     // }
 
-    gtk_box_pack_start(GTK_BOX(history_box), grid, FALSE, FALSE, 5);
 
     GtkWidget *back_button = gtk_button_new_with_label("Back");
     g_signal_connect(back_button, "clicked", G_CALLBACK(render_rooms), NULL);
@@ -1047,3 +1049,4 @@ void activate(GtkApplication *app, gpointer user_data) {
         play_sound_effect(sound_path);
     }
 }
+
