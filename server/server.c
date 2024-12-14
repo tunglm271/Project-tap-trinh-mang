@@ -196,6 +196,27 @@ int main() {
                        buffer[0] = 0x06;
                        send(client_sockets[i], buffer, MAX, 0);
                        }
+                 }
+                 else if (buffer[0] == 0x07) {
+                     int numberQuestion = (rand() % 40) + 1;
+                     memset(buffer, 0, MAX);
+                     snprintf(buffer, MAX, "%s\n", quizArrayEasy[numberQuestion].question);
+                     for (int i = 0; i < 4; i++) {
+                       strncat(buffer, choice[i], MAX - strlen(buffer) - 1); 
+                       strncat(buffer, quizArrayEasy[numberQuestion].option[i], MAX - strlen(buffer) - 1); 
+                       strncat(buffer, "\n", MAX - strlen(buffer) - 1);
+                    }
+                    send(client_sockets[i], buffer, MAX, 0);
+                 } else if (buffer[0] == 0x07) {
+                     int numberQuestion = (rand() % 40) + 1;
+                     memset(buffer, 0, MAX);
+                     snprintf(buffer, MAX, "%s\n", quizArrayEasy[numberQuestion].question);
+                     for (int i = 0; i < 4; i++) {
+                       strncat(buffer, choice[i], MAX - strlen(buffer) - 1); 
+                       strncat(buffer, quizArrayEasy[numberQuestion].option[i], MAX - strlen(buffer) - 1); 
+                       strncat(buffer, "\n", MAX - strlen(buffer) - 1);
+                    }
+                    send(client_sockets[i], buffer, MAX, 0);
                  }   
                  else if(buffer[0] == 0x13) {
                    char room_name[MAX-1];
