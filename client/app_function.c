@@ -598,8 +598,9 @@ void submit_register(GtkButton *button, gpointer register_data) {
         memset(buffer, 0, BUFFER_SIZE);
         recv(sock, buffer, BUFFER_SIZE, 0);
         if(buffer[0] == 0x05) {
-        printf("dang nhap thanh cong\n");
-        } else printf("dang nhap khong thanh cong\n");
+            printf("dang ky thanh cong\n");
+            render_rooms();
+        } else printf("dang ky khong thanh cong\n");
     }
 
     g_free(data);
