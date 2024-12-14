@@ -312,7 +312,25 @@ int main() {
                  } 
                  
                      number++;
-                 }    
+                 }
+                 else if (buffer[0] == 0x11) {
+                  if(number <= 6) {
+                       memset(buffer, 0, MAX);
+                       buffer[0] = 0x12;
+                       snprintf(buffer+1, MAX, "%d\n", quizArrayEasy[previousNumber].right_answer - 1);
+                       send(client_sockets[i], buffer, MAX, 0);
+                  } else if(number > 6 && number <= 11) {
+                       memset(buffer, 0, MAX);
+                       buffer[0] = 0x12;
+                       snprintf(buffer+1, MAX, "%d\n", quizArrayMedium[previousNumber].right_answer - 1);
+                       send(client_sockets[i], buffer, MAX, 0);
+                  } else if(number > 11) {
+                       memset(buffer, 0, MAX);
+                       buffer[0] = 0x12;
+                       snprintf(buffer+1, MAX, "%d\n", quizArrayHard[previousNumber].right_answer - 1);
+                       send(client_sockets[i], buffer, MAX, 0);
+                     }
+                  }    
                  else if(buffer[0] == 0x13) {
                    char room_name[MAX-1];
                    sscanf(buffer + 1, "%[^\n]", room_name);
