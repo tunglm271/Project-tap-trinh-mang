@@ -215,12 +215,14 @@ int main() {
                         memcpy(buffer + 1 + sizeof(int), rooms, sizeof(rooms));
                         send(client_sockets[i], buffer, MAX, 0);
                         log_user_session("data/session_log.txt",username, "login");
-                        print_log_to_terminal(username, "login");
+                        print_log_to_terminal("anomyous", "login");
+                        print_success_to_terminal(username, "login success");
                             
                     } else { 
                        memset(buffer, 0, MAX); 
                        buffer[0] = 0x03;
                        send(client_sockets[i], buffer, MAX, 0);
+                       print_error_to_terminal("anomyous", "login fail");
                       }
                     }
                  else if (buffer[0] == 0x04) {
@@ -230,7 +232,8 @@ int main() {
                        buffer[0] = 0x05;
                        send(client_sockets[i], buffer, MAX, 0);
                        log_user_session("data/session_log.txt",username, "register");
-                       print_log_to_terminal(username, "register");
+                       print_log_to_terminal("anomyous", "register");
+                       print_success_to_terminal(username, "register success");
                  } else {
                        memset(buffer, 0, MAX);
                        buffer[0] = 0x06;
@@ -339,6 +342,7 @@ int main() {
                    int roomId = add_room(room_name, user_name[client_sockets[i]].name);
                    log_user_session("data/session_log.txt",user_name[client_sockets[i]].name, "create room");
                    print_log_to_terminal(user_name[client_sockets[i]].name, "create room");
+                   print_success_to_terminal(user_name[client_sockets[i]].name, "create room success");
                    check_render_room[i] = 0;
 
                    memset(buffer, 0, MAX);
