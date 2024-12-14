@@ -829,6 +829,9 @@ void render_rooms() {
 
     // Duyệt qua mảng các phòng và tạo các phần tử
     for (int i = 0; i < number_rooms; i++) {
+        if (rooms[i].playing == 1) {
+            continue;
+        }
         GtkWidget *room_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);  // Hộp mỗi phòng
         gtk_style_context_add_class(gtk_widget_get_style_context(room_box), "room-box");  // Thêm class cho room_box
 
