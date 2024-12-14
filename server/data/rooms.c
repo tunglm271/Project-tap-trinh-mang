@@ -109,7 +109,7 @@ void print_rooms() {
 }
 
 char** boardcast_users_first_question_in_rooms(int *num_users_out, const char *username) {
-    char **user_list = (char*)malloc(MAX_USERS * sizeof(char*)); 
+    char **user_list = (char**)malloc(MAX_USERS * sizeof(char*)); 
     int user_count = 0;
 
     for (int i = 0; i < num_rooms; i++) {
