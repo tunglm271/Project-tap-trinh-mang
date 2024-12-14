@@ -12,12 +12,14 @@
 #include "data/data.h"
 #include "data/rooms.h"
 #include "data/log_session.h"
+#include "data/log_result.h"
 
 #define PORT 8080
 #define MAX_CLIENTS 20
 #define MAX 8192
 
 #define MAX_QUESTIONS 100
+
 
 #define QUESTION 0x02
 #define ANSWER 0x03
@@ -429,7 +431,21 @@ int main() {
                             send(client_sockets[j], buffer, MAX, 0);
                         }
                     }
+                 } else if(buffer[0] == 0x21) {
+                    char *money = strtok(buffer + 1, ";");
+                    log_results("data/result.txt", username, money);
+                 } else if(buffer[0] == 0x22) {
+                    int count;
+                    Result *results = get_user_results("data/result.txt", username, &count);
+                    memset(buffer, 0, MAX);
+                    int offset = 0;
+                    for (int i = 0; i < count; i++) { 
+                        int written = snprintf(buffer + offset, sizeof(buffer) - offset, "%s;%s\n", results[i].username, results[i].result);
+                        offset += written;
+                    }
+                    send(client_sockets[i], buffer, offset, 0);
                  }
+
                 } 
             }
          }

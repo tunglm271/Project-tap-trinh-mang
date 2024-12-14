@@ -426,7 +426,10 @@ void render_question(GtkButton *button) {
     if(user_game_data.is_call_friend_used == FALSE) {
         gtk_grid_attach(GTK_GRID(helpButton), callFriend, 1, 0, 1, 1);
     }
-    gtk_grid_attach(GTK_GRID(helpButton), askPeople, 2, 0, 1, 1);
+
+    if(user_game_data.is_ask_people_used == FALSE) {
+        gtk_grid_attach(GTK_GRID(helpButton), askPeople, 2, 0, 1, 1);
+    }
     gtk_box_pack_start(GTK_BOX(money_section), helpButton, FALSE, FALSE, 5);
 
     // Create and pack the labels into the box
@@ -758,13 +761,31 @@ void render_history() {
     gtk_widget_set_name(title_label, "history-title");
     gtk_box_pack_start(GTK_BOX(history_box), title_label, FALSE, FALSE, 10);
 
-    // memset(buffer, 0, BUFFER_SIZE);
-    // buffer[0] = 0x18; // Assuming 0x18 is the code to request game history
-    // send(sock, buffer, BUFFER_SIZE, 0);
+    memset(buffer, 0, BUFFER_SIZE);
+    buffer[0] = 0x22;
+    send(sock, buffer, BUFFER_SIZE, 0);
 
-    // memset(buffer, 0, BUFFER_SIZE);
-    // recv(sock, buffer, BUFFER_SIZE, 0);
+    recv(sock, buffer, BUFFER_SIZE, 0);
 
+
+    GtkWidget *grid = gtk_grid_new();
+    gtk_grid_set_column_homogeneous(GTK_GRID(grid), TRUE);
+    gtk_grid_set_column_spacing(GTK_GRID(grid), 10);
+
+    char *line = strtok(buffer, "\n");
+    int row = 0;
+    while (line != NULL) {
+        char username[50];
+        char result[50];
+        sscanf(line, "%[^;];%s", username, result);
+        GtkWidget *username_label = gtk_label_new(username);
+        GtkWidget *result_label = gtk_label_new(result);
+        gtk_grid_attach(GTK_GRID(grid), username_label, 0, row, 1, 1);
+        gtk_grid_attach(GTK_GRID(grid), result_label, 1, row, 1, 1);
+        printf("Username: %s, Result: %s\n", username, result);
+        line = strtok(NULL, "\n"); // Move to the next line
+        row++;
+    }
     // char *history_entry = strtok(buffer, "\n");
     // while (history_entry != NULL) {
     //     GtkWidget *entry_label = gtk_label_new(history_entry);
@@ -773,20 +794,16 @@ void render_history() {
     //     history_entry = strtok(NULL, "\n");
     // }
 
-    GtkWidget *grid = gtk_grid_new();
-    gtk_grid_set_column_homogeneous(GTK_GRID(grid), TRUE);
-    gtk_grid_set_column_spacing(GTK_GRID(grid), 10);
+    // for (int i = 0; i < 5; i++) {
+    //     gchar *room_text = g_strdup_printf("Room %d", i + 1);
+    //     GtkWidget *room_label = gtk_label_new(room_text);
+    //     g_free(room_text);
 
-    for (int i = 0; i < 5; i++) {
-        gchar *room_text = g_strdup_printf("Room %d", i + 1);
-        GtkWidget *room_label = gtk_label_new(room_text);
-        g_free(room_text);
+    //     GtkWidget *money_label = gtk_label_new(money_labels[i]);
 
-        GtkWidget *money_label = gtk_label_new(money_labels[i]);
-
-        gtk_grid_attach(GTK_GRID(grid), room_label, 0, i, 1, 1);
-        gtk_grid_attach(GTK_GRID(grid), money_label, 1, i, 1, 1);
-    }
+    //     gtk_grid_attach(GTK_GRID(grid), room_label, 0, i, 1, 1);
+    //     gtk_grid_attach(GTK_GRID(grid), money_label, 1, i, 1, 1);
+    // }
 
     gtk_box_pack_start(GTK_BOX(history_box), grid, FALSE, FALSE, 5);
 
@@ -916,6 +933,11 @@ void render_summary_page(bool isGiveUp) {
         countdown_timeout_id = 0;
     }
     GtkWidget *summary_box, *amount_label, *home_button;
+
+    memset(buffer, 0, BUFFER_SIZE);
+    buffer[0] = 0x21;
+    sprintf(buffer+1, "%s", money_labels[user_game_data.current_point + 1]);
+    send(sock, buffer, BUFFER_SIZE, 0);
 
     // Tạo container chính cho màn hình tổng kết
     summary_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
