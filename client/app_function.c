@@ -24,6 +24,7 @@ GtkWidget *main_box;
 Room rooms[MAX_ROOMS];
 char user_name[1024];
 int client_id;
+int isLost = 0;
 
 GameData user_game_data;
 
@@ -462,6 +463,10 @@ void on_server_message(GIOChannel *source, GIOCondition condition, gpointer data
         }
         if (buffer[0] == 0x16) {
             render_question(NULL);
+        }
+        if (buffer[0] == 0x20) {
+            isLost = 1;
+            render_summary_page(FALSE);
         }
     }
 }
@@ -925,6 +930,11 @@ void render_summary_page(bool isGiveUp) {
             amount_text = g_strdup_printf("Sorry you lost! You earned 0$");
         } else {
             amount_text = g_strdup_printf("Congratulations! You earned %s!", money_labels[15 - mark]);
+        }
+
+        if (isLost) {
+            amount_text = g_strdup_printf("You lost! Someone answered before you.");
+            isLost = 0;
         }
     }
     amount_label = gtk_label_new(amount_text);
