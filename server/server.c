@@ -277,8 +277,10 @@ int main() {
                     send(client_sockets[i], buffer, MAX, 0);
                  }
                  else if (buffer[0] == 0x08) {
+                    int check = 0;
                     if(number <= 5) {
                          if(atoi(buffer+1) == quizArrayEasy[previousNumber].right_answer - 1) {
+                         if(number == 0) check = 1;
                          memset(buffer, 0, MAX);
                          buffer[0] = 0x09;
                          send(client_sockets[i], buffer, MAX, 0);
@@ -288,6 +290,22 @@ int main() {
                          buffer[0] = 0x10;
                          send(client_sockets[i], buffer, MAX, 0);
                          }   
+                    }
+
+                    if(check == 1) {
+                       int num_users;
+                       char **users_in_room = boardcast_users_first_question_in_rooms(&num_users, user_name[client_sockets[i]].name);
+                       for(int k=4; k < 15; k++) {
+                         for(int i=0; i < num_users; i++) {
+                             int check = strcmp(user_name[k].name, users_in_room[i]);
+                             if(check == 0) {
+                                 memset(buffer, 0, MAX);
+                                 buffer[0] = 0x20;
+                                 send(k, buffer, MAX, 0);
+                             };
+                         }
+                       }
+
                     }
                     
                     else if (number > 5 && number <= 10) {

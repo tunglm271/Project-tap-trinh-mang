@@ -108,6 +108,32 @@ void print_rooms() {
     }
 }
 
+char** boardcast_users_first_question_in_rooms(int *num_users_out, const char *username) {
+    char *user_list = (char*)malloc(MAX_USERS * sizeof(char*)); 
+    int user_count = 0;
+
+    for (int i = 0; i < num_rooms; i++) {
+            for (int j = 0; j < rooms[i].num_users; j++) {
+                if(strcmp(username, rooms[i].users[j])) {
+                    for(int k = 0; k < 10; k++) {
+                        int check = strcmp(username, rooms[i].users[k]);
+                        if (check != 0) {
+                             user_list[user_count] = (char*)malloc(MAX_NAME_LEN * sizeof(char));
+                             strncpy(user_list[user_count], rooms[i].users[k], MAX_NAME_LEN);
+                             user_count++;
+                        }
+                    }
+                }
+                
+                
+            }
+            break;  
+    }
+
+    *num_users_out = user_count;
+    return user_list;
+}
+
 char** boardcast_users_in_rooms(int room_id, int *num_users_out) {
     char **user_list = (char**)malloc(MAX_USERS * sizeof(char*)); 
     int user_count = 0;
