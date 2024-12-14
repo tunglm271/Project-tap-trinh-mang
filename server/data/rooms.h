@@ -15,6 +15,7 @@ typedef struct {
     char creator[MAX_NAME_LEN];
     int num_users;
     char users[MAX_USERS][MAX_NAME_LEN];
+    int playing;
 } Room;
 
 extern Room rooms[MAX_ROOMS];
