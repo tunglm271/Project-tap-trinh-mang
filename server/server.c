@@ -133,6 +133,24 @@ int main() {
         indexEasy++;
     }
     
+    while(indexMedium < 20) {
+        do {
+           numberQuestion = (rand() % 40) + 1;
+         } while(isNumberInArray(questionMedium, 10, numberQuestion));
+             
+        questionMedium[indexMedium] = numberQuestion;
+        indexMedium++;
+    }
+    
+    while(indexHard < 20) {
+        do {
+           numberQuestion = (rand() % 40) + 1;
+         } while(isNumberInArray(questionHard, 10, numberQuestion));
+             
+        questionHard[indexHard] = numberQuestion;
+        indexHard++;
+    }
+    
     while(1) {
         FD_ZERO(&readfds);
         FD_SET(server_fd, &readfds);
@@ -226,23 +244,72 @@ int main() {
                        strncat(buffer, quizArrayEasy[questionEasy[number]].option[i], MAX - strlen(buffer) - 1); 
                        strncat(buffer, "\n", MAX - strlen(buffer) - 1);
                     }
-                   }    
-     
+                   }
+                   
+                   if(number > 5 && number <= 10) {
+                     memset(buffer, 0, MAX);
+                     snprintf(buffer, MAX, "%s\n", quizArrayMedium[questionMedium[number]].question);
+                     for (int i = 0; i < 4; i++) {
+                       strncat(buffer, choice[i], MAX - strlen(buffer) - 1);
+                       strncat(buffer, quizArrayMedium[questionMedium[number]].option[i], MAX - strlen(buffer) - 1); 
+                       strncat(buffer, "\n", MAX - strlen(buffer) - 1);
+                    }
+                   }
+                   
+                   if(number > 10) {
+                     memset(buffer, 0, MAX);
+                     snprintf(buffer, MAX, "%s\n", quizArrayHard[questionHard[number]].question);
+                     for (int i = 0; i < 4; i++) {
+                       strncat(buffer, choice[i], MAX - strlen(buffer) - 1);
+                       strncat(buffer, quizArrayHard[questionHard[number]].option[i], MAX - strlen(buffer) - 1); 
+                       strncat(buffer, "\n", MAX - strlen(buffer) - 1);
+                    }
+                   }
+                     
                     send(client_sockets[i], buffer, MAX, 0);
                     previousNumber = questionEasy[number];
                  }
                  else if (buffer[0] == 0x08) {
-                    if(atoi(buffer+1) == quizArrayEasy[previousNumber].right_answer - 1) {
+                    if(number <= 5) {
+                         if(atoi(buffer+1) == quizArrayEasy[previousNumber].right_answer - 1) {
+                         memset(buffer, 0, MAX);
+                         buffer[0] = 0x09;
+                         send(client_sockets[i], buffer, MAX, 0);
+                    }
+                    else {
+                         memset(buffer, 0, MAX);
+                         buffer[0] = 0x10;
+                         send(client_sockets[i], buffer, MAX, 0);
+                         }   
+                    }
+                    
+                    else if (number > 5 && number <= 10) {
+                    if(atoi(buffer+1) == quizArrayMedium[previousNumber].right_answer - 1) {
                      memset(buffer, 0, MAX);
                      buffer[0] = 0x09;
                      send(client_sockets[i], buffer, MAX, 0);
-                     number++;
                     }
-                    else {
+                    else { 
                       memset(buffer, 0, MAX);
                       buffer[0] = 0x10;
                       send(client_sockets[i], buffer, MAX, 0);
                     }
+                    }
+                    
+                    else if (number > 10) {
+                    if(atoi(buffer+1) == quizArrayHard[previousNumber].right_answer - 1) {
+                     memset(buffer, 0, MAX);
+                     buffer[0] = 0x09;
+                     send(client_sockets[i], buffer, MAX, 0);
+                    }
+                    else { 
+                      memset(buffer, 0, MAX);
+                      buffer[0] = 0x10;
+                      send(client_sockets[i], buffer, MAX, 0);
+                    }  
+                 } 
+                 
+                     number++;
                  }    
                  else if(buffer[0] == 0x13) {
                    char room_name[MAX-1];
