@@ -359,7 +359,8 @@ int main() {
                     int roomID = atoi(buffer+1);
                     char socket_in_room[1024]; 
                     int num_users;
-                    char **users_in_room = boardcast_users_in_rooms(1, &num_users);
+                    char **users_in_room = boardcast_users_in_rooms(roomID, &num_users);
+                    set_room_playing(roomID);
                     
                     for(int k=4; k < 15; k++) {
                          for(int i=0; i < num_users; i++) {

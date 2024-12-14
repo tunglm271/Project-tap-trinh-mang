@@ -86,6 +86,14 @@ void remove_user_from_room(int room_id, const char *username) {
 
 }
 
+void set_room_playing(int room_id) {
+     for (int i = 0; i < num_rooms; i++) {
+          if (rooms[i].id == room_id) {
+              rooms[i].playing = 1;
+          }
+     }
+}
+
 void print_rooms() {
     for (int i = 0; i < num_rooms; i++) {
         printf("Room ID: %d\n", rooms[i].id);

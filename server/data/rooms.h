@@ -26,5 +26,6 @@ void remove_user_from_room(int room_id, const char *username);
 void remove_room(int room_id);
 void print_rooms();
 char** boardcast_users_in_rooms(int room_id, int *num_users_out);
+void set_room_playing(int room_id);
 
 #endif
