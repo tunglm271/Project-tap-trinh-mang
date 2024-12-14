@@ -112,6 +112,26 @@ int main() {
     
     fd_set readfds;
     struct timeval timeout;
+    int questionEasy[MAX_QUESTIONS];
+    int questionMedium[MAX_QUESTIONS];
+    int questionHard[MAX_QUESTIONS];
+    
+    int indexEasy=0;
+    int indexMedium=0;
+    int indexHard=0;
+    
+    int numberQuestion;
+    int number=0;
+    int previousNumber;
+    
+    while(indexEasy < 10) {
+        do {
+           numberQuestion = (rand() % 40) + 1;
+         } while(isNumberInArray(questionEasy, 10, numberQuestion));
+             
+        questionEasy[indexEasy] = numberQuestion;
+        indexEasy++;
+    }
     
     while(1) {
         FD_ZERO(&readfds);
@@ -198,26 +218,32 @@ int main() {
                        }
                  }
                  else if (buffer[0] == 0x07) {
-                     int numberQuestion = (rand() % 40) + 1;
+                   if(number <= 5) {
                      memset(buffer, 0, MAX);
-                     snprintf(buffer, MAX, "%s\n", quizArrayEasy[numberQuestion].question);
+                     snprintf(buffer, MAX, "%s\n", quizArrayEasy[questionEasy[number]].question);
                      for (int i = 0; i < 4; i++) {
-                       strncat(buffer, choice[i], MAX - strlen(buffer) - 1); 
-                       strncat(buffer, quizArrayEasy[numberQuestion].option[i], MAX - strlen(buffer) - 1); 
+                       strncat(buffer, choice[i], MAX - strlen(buffer) - 1);
+                       strncat(buffer, quizArrayEasy[questionEasy[number]].option[i], MAX - strlen(buffer) - 1); 
                        strncat(buffer, "\n", MAX - strlen(buffer) - 1);
                     }
+                   }    
+     
                     send(client_sockets[i], buffer, MAX, 0);
-                 } else if (buffer[0] == 0x07) {
-                     int numberQuestion = (rand() % 40) + 1;
+                    previousNumber = questionEasy[number];
+                 }
+                 else if (buffer[0] == 0x08) {
+                    if(atoi(buffer+1) == quizArrayEasy[previousNumber].right_answer - 1) {
                      memset(buffer, 0, MAX);
-                     snprintf(buffer, MAX, "%s\n", quizArrayEasy[numberQuestion].question);
-                     for (int i = 0; i < 4; i++) {
-                       strncat(buffer, choice[i], MAX - strlen(buffer) - 1); 
-                       strncat(buffer, quizArrayEasy[numberQuestion].option[i], MAX - strlen(buffer) - 1); 
-                       strncat(buffer, "\n", MAX - strlen(buffer) - 1);
+                     buffer[0] = 0x09;
+                     send(client_sockets[i], buffer, MAX, 0);
+                     number++;
                     }
-                    send(client_sockets[i], buffer, MAX, 0);
-                 }   
+                    else {
+                      memset(buffer, 0, MAX);
+                      buffer[0] = 0x10;
+                      send(client_sockets[i], buffer, MAX, 0);
+                    }
+                 }    
                  else if(buffer[0] == 0x13) {
                    char room_name[MAX-1];
                    sscanf(buffer + 1, "%[^\n]", room_name);
