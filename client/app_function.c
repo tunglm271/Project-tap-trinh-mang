@@ -466,7 +466,7 @@ void on_server_message(GIOChannel *source, GIOCondition condition, gpointer data
             render_rooms();
         }
         if (buffer[0] == 0x16) {
-            printf("room started!\n");
+            render_question(NULL);
         }
     }
 }
