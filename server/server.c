@@ -215,6 +215,7 @@ int main() {
                         memcpy(buffer + 1 + sizeof(int), rooms, sizeof(rooms));
                         send(client_sockets[i], buffer, MAX, 0);
                         log_user_session("data/session_log.txt",username, "login");
+                        print_log_to_terminal(username, "login");
                             
                     } else { 
                        memset(buffer, 0, MAX); 
@@ -229,6 +230,7 @@ int main() {
                        buffer[0] = 0x05;
                        send(client_sockets[i], buffer, MAX, 0);
                        log_user_session("data/session_log.txt",username, "register");
+                       print_log_to_terminal(username, "register");
                  } else {
                        memset(buffer, 0, MAX);
                        buffer[0] = 0x06;
@@ -336,6 +338,7 @@ int main() {
                    sscanf(buffer + 1, "%[^\n]", room_name);
                    int roomId = add_room(room_name, user_name[client_sockets[i]].name);
                    log_user_session("data/session_log.txt",user_name[client_sockets[i]].name, "create room");
+                   print_log_to_terminal(user_name[client_sockets[i]].name, "create room");
                    check_render_room[i] = 0;
 
                    memset(buffer, 0, MAX);
