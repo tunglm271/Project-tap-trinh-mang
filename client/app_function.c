@@ -457,12 +457,7 @@ void on_server_message(GIOChannel *source, GIOCondition condition, gpointer data
     if(condition & G_IO_IN) {  
         memset(buffer, 0, BUFFER_SIZE);
         recv(sock, buffer, BUFFER_SIZE, 0);
-        int received_number_rooms;
         if(buffer[0] == 0x14) {
-            memcpy(&received_number_rooms, buffer + 1, sizeof(int));
-            memcpy(rooms, buffer + 1 + sizeof(int), sizeof(rooms));
-            printf("%d\n", received_number_rooms); 
-            number_rooms = received_number_rooms;
             render_rooms();
         }
         if (buffer[0] == 0x16) {
@@ -803,11 +798,21 @@ void render_rooms() {
     buffer[0] = 0x17;
     send(sock, buffer, BUFFER_SIZE, 0);
 
+    memset(buffer, 0, BUFFER_SIZE);
+    recv(sock, buffer, BUFFER_SIZE, 0);
+    int received_number_rooms;
+    memcpy(&received_number_rooms, buffer + 1, sizeof(int));
+    memcpy(rooms, buffer + 1 + sizeof(int), sizeof(rooms));
+    printf("%d\n", received_number_rooms); 
+    number_rooms = received_number_rooms;
+
     remove_all_children(GTK_CONTAINER(main_box));
     if(countdown_timeout_id) {
         g_source_remove(countdown_timeout_id);
         countdown_timeout_id = 0;
     }
+
+
 
     gtk_orientable_set_orientation(GTK_ORIENTABLE(main_box), GTK_ORIENTATION_VERTICAL);
     restart_game_data();

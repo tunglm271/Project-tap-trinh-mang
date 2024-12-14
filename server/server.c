@@ -360,7 +360,11 @@ int main() {
                    }
                   }
                  else if (buffer[0] == 0x17) {
-                     check_render_room[i] = 1;
+                    check_render_room[i] = 1;
+                    memset(buffer, 0, MAX);
+                    memcpy(buffer + 1, &num_rooms, sizeof(int));
+                    memcpy(buffer + 1 + sizeof(int), rooms, sizeof(rooms));
+                    send(client_sockets[i], buffer, MAX, 0);
                  } 
                  else if (buffer[0] == 0x18) {
                      check_render_room[i] = 0;
