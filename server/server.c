@@ -312,7 +312,25 @@ int main() {
                  } 
                  
                      number++;
-                 }    
+                 }
+                 else if (buffer[0] == 0x11) {
+                  if(number <= 6) {
+                       memset(buffer, 0, MAX);
+                       buffer[0] = 0x12;
+                       snprintf(buffer+1, MAX, "%d\n", quizArrayEasy[previousNumber].right_answer - 1);
+                       send(client_sockets[i], buffer, MAX, 0);
+                  } else if(number > 6 && number <= 11) {
+                       memset(buffer, 0, MAX);
+                       buffer[0] = 0x12;
+                       snprintf(buffer+1, MAX, "%d\n", quizArrayMedium[previousNumber].right_answer - 1);
+                       send(client_sockets[i], buffer, MAX, 0);
+                  } else if(number > 11) {
+                       memset(buffer, 0, MAX);
+                       buffer[0] = 0x12;
+                       snprintf(buffer+1, MAX, "%d\n", quizArrayHard[previousNumber].right_answer - 1);
+                       send(client_sockets[i], buffer, MAX, 0);
+                     }
+                  }    
                  else if(buffer[0] == 0x13) {
                    char room_name[MAX-1];
                    sscanf(buffer + 1, "%[^\n]", room_name);
@@ -373,6 +391,15 @@ int main() {
                          }
                     }
 
+                    memset(buffer, 0, MAX);
+                    buffer[0] = 0x14;
+                    memcpy(buffer + 1, &num_rooms, sizeof(int));
+                    memcpy(buffer + 1 + sizeof(int), rooms, sizeof(rooms));
+                    for(int j=0; j< MAX_CLIENTS; j++) {
+                        if(client_sockets[j] > 0 && check_render_room[j] == 1) {
+                            send(client_sockets[j], buffer, MAX, 0);
+                        }
+                    }
                  }
                 } 
             }
