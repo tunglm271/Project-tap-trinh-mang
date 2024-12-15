@@ -24,6 +24,7 @@ GtkWidget *main_box;
 Room rooms[MAX_ROOMS];
 char user_name[1024];
 int client_id;
+int g_room_id = -1;
 int isLost = 0;
 
 GameData user_game_data;
@@ -477,7 +478,9 @@ void on_server_message(GIOChannel *source, GIOCondition condition, gpointer data
 void handle_go_back() {
     memset(buffer, 0, BUFFER_SIZE);
     buffer[0] = 0x24;
+    sprintf(buffer+1, "%d", g_room_id);
     send(sock, buffer, BUFFER_SIZE, 0);
+    g_room_id = - 1;
     render_rooms();
 }
 
@@ -686,6 +689,7 @@ void join_room(GtkWidget *widget, gpointer data) {
 
     gpointer *newData = (gpointer *)data;
     int roomId = GPOINTER_TO_INT(newData[0]);
+    g_room_id = roomId;
     memset(buffer, 0, BUFFER_SIZE);
     buffer[0] = 0x15;
     sprintf(buffer+1, "%d;%s", roomId, user_name);
