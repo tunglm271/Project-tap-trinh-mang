@@ -474,6 +474,13 @@ void on_server_message(GIOChannel *source, GIOCondition condition, gpointer data
     }
 }
 
+void handle_go_back() {
+    memset(buffer, 0, BUFFER_SIZE);
+    buffer[0] = 0x24;
+    send(sock, buffer, BUFFER_SIZE, 0);
+    render_rooms();
+}
+
 void render_loading(GtkButton *button) {
     GtkWidget *spinner;
     GtkWidget *label;
@@ -491,7 +498,7 @@ void render_loading(GtkButton *button) {
     gtk_box_pack_start(GTK_BOX(main_box), grid, FALSE, FALSE, 0);
     gtk_widget_set_name(go_back_button, "go-back-btn");
     
-    g_signal_connect(go_back_button, "clicked", G_CALLBACK(render_rooms), NULL);
+    g_signal_connect(go_back_button, "clicked", G_CALLBACK(handle_go_back), NULL);
     
     // Create a spinner
     spinner = gtk_spinner_new();
