@@ -156,6 +156,16 @@ char** boardcast_users_in_rooms(int room_id, int *num_users_out) {
     return user_list;
 }
 
+int find_room_id(const char *username) {
+    for (int i = 0; i < num_rooms; i++) {
+        for(int j = 0; j < rooms[i].num_users; j++) {
+            if(strcmp(username, rooms[i].users[j])) {
+                return rooms[i].id;
+            }
+        }
+    }
+}
+
 void remove_room(int room_id) {
     int room_index = -1;
 

@@ -29,5 +29,6 @@ void print_rooms();
 char** boardcast_users_in_rooms(int room_id, int *num_users_out);
 void set_room_playing(int room_id);
 char** boardcast_users_first_question_in_rooms(int *num_users_out, const char *username);
+int find_room_id(const char *username);
 
 #endif

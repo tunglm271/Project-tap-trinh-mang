@@ -125,10 +125,11 @@ int main() {
     int numberQuestion;
     int number=0;
     int previousNumber;
+    srand(time(0));
     
     while(indexEasy < 10) {
         do {
-           numberQuestion = (rand() % 40) + 1;
+           numberQuestion = (rand() % 30) + 1;
          } while(isNumberInArray(questionEasy, 10, numberQuestion));
              
         questionEasy[indexEasy] = numberQuestion;
@@ -137,17 +138,17 @@ int main() {
     
     while(indexMedium < 20) {
         do {
-           numberQuestion = (rand() % 40) + 1;
-         } while(isNumberInArray(questionMedium, 10, numberQuestion));
+           numberQuestion = (rand() % 30) + 1;
+         } while(isNumberInArray(questionMedium, 20, numberQuestion));
              
         questionMedium[indexMedium] = numberQuestion;
         indexMedium++;
     }
     
-    while(indexHard < 20) {
+    while(indexHard < 30) {
         do {
-           numberQuestion = (rand() % 40) + 1;
-         } while(isNumberInArray(questionHard, 10, numberQuestion));
+           numberQuestion = (rand() % 30) + 1;
+         } while(isNumberInArray(questionHard, 30, numberQuestion));
              
         questionHard[indexHard] = numberQuestion;
         indexHard++;
@@ -307,7 +308,10 @@ int main() {
                              };
                          }
                        }
-
+                       
+                       int roomID = find_room_id(user_name[client_sockets[i]].name);
+                       remove_room(roomID);
+                       
                     }
                     
                     else if (number > 5 && number <= 10) {
@@ -410,6 +414,7 @@ int main() {
                     int num_users;
                     char **users_in_room = boardcast_users_in_rooms(roomID, &num_users);
                     set_room_playing(roomID);
+                    number=0;
                     
                     for(int k=4; k < 15; k++) {
                          for(int i=0; i < num_users; i++) {
