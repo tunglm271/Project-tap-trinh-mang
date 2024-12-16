@@ -145,10 +145,10 @@ int main() {
         indexMedium++;
     }
     
-    while(indexHard < 30) {
+    while(indexHard < 25) {
         do {
            numberQuestion = (rand() % 30) + 1;
-         } while(isNumberInArray(questionHard, 30, numberQuestion));
+         } while(isNumberInArray(questionHard, 25, numberQuestion));
              
         questionHard[indexHard] = numberQuestion;
         indexHard++;
@@ -407,11 +407,22 @@ int main() {
                      }
                        
                      add_user_to_room(roomId, token);
+                     
+                     memset(buffer, 0, MAX);
+                     buffer[0] = 0x14;
+                     memcpy(buffer + 1, &num_rooms, sizeof(int));
+                     memcpy(buffer + 1 + sizeof(int), rooms, sizeof(rooms));
+                     for(int j=0; j< MAX_CLIENTS; j++) {
+                       if(client_sockets[j] > 0 && check_render_room[j] == 1) {
+                           send(client_sockets[j], buffer, MAX, 0);
+                       }
+                     }
                  }
                  else if (buffer[0] == 0x19) {
                     int roomID = atoi(buffer+1);
                     char socket_in_room[1024]; 
                     int num_users;
+                    print_rooms();
                     char **users_in_room = boardcast_users_in_rooms(roomID, &num_users);
                     set_room_playing(roomID);
                     number=0;
@@ -455,8 +466,23 @@ int main() {
                         }
                         send(client_sockets[i], buffer, offset, 0);
                     }
+                 } else if (buffer[0] == 0x24) {
+                       int roomID = atoi(buffer+1);
+                       remove_user_from_room(roomID, user_name[client_sockets[i]].name);
+                       
+                       check_render_room[i] = 1;
+                       
+                       memset(buffer, 0, MAX);
+                       buffer[0] = 0x14;
+                       memcpy(buffer + 1, &num_rooms, sizeof(int));
+                       memcpy(buffer + 1 + sizeof(int), rooms, sizeof(rooms));
+                       for(int j=0; j< MAX_CLIENTS; j++) {
+                           if(client_sockets[j] > 0 && check_render_room[j] == 1) {
+                               send(client_sockets[j], buffer, MAX, 0);
+                           }
+                      }
+                      
                  }
-
                 } 
             }
          }

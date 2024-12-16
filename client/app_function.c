@@ -345,12 +345,15 @@ void render_question(GtkButton *button) {
     // Start the countdown
     countdown_timeout_id = g_timeout_add(1000, (GSourceFunc)update_countdown, countdown_data);
     
+    
+    
     memset(buffer, 0, BUFFER_SIZE);
     buffer[0] = 0x07;
     send(sock, buffer, BUFFER_SIZE, 0);
     
     memset(buffer, 0, BUFFER_SIZE);
     recv(sock, buffer, BUFFER_SIZE, 0);
+
     
     char *question = strtok(buffer, "\n"); 
     char *options[4];
@@ -455,7 +458,7 @@ void render_question(GtkButton *button) {
         gtk_box_pack_start(GTK_BOX(main_box), money_section, FALSE, FALSE, 0);
     }
     gtk_widget_show_all(main_box);
-
+    
 }
 
 void on_server_message(GIOChannel *source, GIOCondition condition, gpointer data) {
@@ -466,6 +469,7 @@ void on_server_message(GIOChannel *source, GIOCondition condition, gpointer data
             render_rooms();
         }
         if (buffer[0] == 0x16) {
+            printf("Hello\n");
             render_question(NULL);
         }
         if (buffer[0] == 0x20) {
@@ -479,9 +483,9 @@ void handle_go_back() {
     memset(buffer, 0, BUFFER_SIZE);
     buffer[0] = 0x24;
     sprintf(buffer+1, "%d", g_room_id);
+    printf("%d\n", g_room_id);
     send(sock, buffer, BUFFER_SIZE, 0);
     g_room_id = - 1;
-    render_rooms();
 }
 
 void render_loading(GtkButton *button) {
